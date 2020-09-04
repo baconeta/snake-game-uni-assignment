@@ -41,13 +41,13 @@ class Snake():
     # Constructor
     def __init__(self):
         self.segments = []
-        self.spriteslist = pygame.sprite.Group()
+        self.sprites_list = pygame.sprite.Group()
         for i in range(15):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
             y = (segment_height + segment_margin) * 2
             segment = Segment(x, y)
             self.segments.append(segment)
-            self.spriteslist.add(segment)
+            self.sprites_list.add(segment)
             
     def move(self):
         # Figure out where new segment will be
@@ -58,14 +58,14 @@ class Snake():
         # At the moment a potential move off the screen means nothing happens, but it should end the game
         if 0 <= x <= width - segment_width and 0 <= y <= height - segment_height:  
         
-        # Insert new segment into the list
+            # Insert new segment into the list
             segment = Segment(x, y)
             self.segments.insert(0, segment)
-            self.spriteslist.add(segment)
+            self.sprites_list.add(segment)
         # Get rid of last segment of the snake
         # .pop() command removes last item in list
             old_segment = self.segments.pop()
-            self.spriteslist.remove(old_segment)
+            self.sprites_list.remove(old_segment)
         
     
 class Segment(pygame.sprite.Sprite):
@@ -130,7 +130,7 @@ while not done:
     # -- Draw everything
     # Clear screen
     screen.fill(BLACK)
-    my_snake.spriteslist.draw(screen)
+    my_snake.sprites_list.draw(screen)
     
     # Flip screen
     pygame.display.flip()
