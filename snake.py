@@ -97,13 +97,22 @@ class Food:
         self.food_list = []
         self.food_items = pygame.sprite.Group()
         for i in range(number_foods):
-            x = random.randint(1, total_segments)
-            y = random.randint(1, total_segments)
-            x *= (segment_width + segment_margin)
-            y *= (segment_height + segment_margin)
-            new_food = FoodItem(x, y)
-            self.food_list.append(new_food)
-            self.food_items.add(new_food)
+            self.create_food()
+
+    def create_food(self):
+        x = random.randint(1, total_segments)
+        y = random.randint(1, total_segments)
+        x *= (segment_width + segment_margin)
+        y *= (segment_height + segment_margin)
+        # To add a check that ensures it doesn't spawn on the snakes
+        new_food = FoodItem(x, y)
+        self.food_list.append(new_food)
+        self.food_items.add(new_food)
+
+    def replenish(self):
+        self.create_food()
+        # can add complication here later if I want
+
 
 
 class FoodItem(pygame.sprite.Sprite):
