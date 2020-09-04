@@ -29,6 +29,8 @@ segment_margin = 3
 # Set the width and height of each snake segment
 segment_width = min(height, width) / 40 - segment_margin
 segment_height = min(height, width) / 40 - segment_margin
+total_segments = int(width / (segment_width+segment_margin))
+
  
 # Set initial speed
 x_change = segment_width + segment_margin
@@ -40,7 +42,7 @@ class Snake:
     
     # Constructor
     def __init__(self):
-        starting_length = 15
+        starting_length = 12
         self.segments = []
         self.sprites_list = pygame.sprite.Group()
         for i in range(starting_length):
@@ -92,12 +94,16 @@ class Food:
         self.image = pygame.Surface([segment_width, segment_height])
         self.image.fill(WHITE)
         self.rect = self.image.get_rect()
-        self.food_list = pygame.sprite.Group()
+        self.food_list = []
+        self.food_items = pygame.sprite.Group()
         for i in range(number_foods):
-            # Randomly generate an x and y coordinate
-            # Use x,y to append a food item using FoodItem()
-            # remember to add it to the food_list Group also
-            continue
+            x = random.randint(1, total_segments)
+            y = random.randint(1, total_segments)
+            x *= (segment_width + segment_margin)
+            y *= (segment_height + segment_margin)
+            new_food = FoodItem(x, y)
+            self.food_list.append(new_food)
+            self.food_items.add(new_food)
 
 
 class FoodItem(pygame.sprite.Sprite):
@@ -105,7 +111,7 @@ class FoodItem(pygame.sprite.Sprite):
         super().__init__()
         # Set height, width
         self.image = pygame.Surface([segment_width, segment_height])
-        self.image.fill(WHITE)
+        self.image.fill(RED)
 
         # Set top-left corner of the bounding rectangle to be the passed-in location.
         self.rect = self.image.get_rect()
@@ -162,6 +168,7 @@ while not done:
     # Clear screen
     screen.fill(BLACK)
     my_snake.sprites_list.draw(screen)
+    food_onscreen.food_items.draw(screen)
     
     # Flip screen
     pygame.display.flip()
