@@ -35,14 +35,15 @@ x_change = segment_width + segment_margin
 y_change = 0
  
 
-class Snake():
+class Snake:
     """ Class to represent one snake. """
     
     # Constructor
     def __init__(self):
+        starting_length = 15
         self.segments = []
         self.sprites_list = pygame.sprite.Group()
-        for i in range(15):
+        for i in range(starting_length):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
             y = (segment_height + segment_margin) * 2
             segment = Segment(x, y)
@@ -84,7 +85,33 @@ class Segment(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
- 
+
+
+class Food:
+    def __init__(self, number_foods):
+        self.image = pygame.Surface([segment_width, segment_height])
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.food_list = pygame.sprite.Group()
+        for i in range(number_foods):
+            # Randomly generate an x and y coordinate
+            # Use x,y to append a food item using FoodItem()
+            # remember to add it to the food_list Group also
+            continue
+
+
+class FoodItem(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        # Set height, width
+        self.image = pygame.Surface([segment_width, segment_height])
+        self.image.fill(WHITE)
+
+        # Set top-left corner of the bounding rectangle to be the passed-in location.
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
  
 # Call this function so the Pygame library can initialize itself
 pygame.init()
@@ -97,6 +124,10 @@ pygame.display.set_caption('Snake Game')
  
 # Create an initial snake
 my_snake = Snake()
+
+# Build list of initial food spots
+number_of_food = 4
+food_onscreen = Food(number_of_food)
  
 clock = pygame.time.Clock()
 done = False
@@ -136,6 +167,6 @@ while not done:
     pygame.display.flip()
  
     # Pause
-    clock.tick(5)
+    clock.tick(10)
  
 pygame.quit()
