@@ -8,7 +8,7 @@
  http://simpson.edu/computer-science/
  
 """
- 
+
 import pygame
 import random
  
@@ -42,9 +42,10 @@ class Snake:
     
     # Constructor
     def __init__(self):
-        starting_length = 10
+        starting_length = 3
         self.segments = []
         self.sprites_list = pygame.sprite.Group()
+        self.end_snake = None
 
         for i in range(0, starting_length):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
@@ -52,16 +53,15 @@ class Snake:
             segment = Segment(x, y)
             self.segments.append(segment)
             self.sprites_list.add(segment)
+            self.end_snake = segment
             
     def move(self):
         # Figure out where new segment will be
         x = self.segments[0].rect.x + x_change
         y = self.segments[0].rect.y + y_change
-        
         # Don't move off the screen
         # At the moment a potential move off the screen means nothing happens, but it should end the game
-        if 0 <= x <= width - segment_width and 0 <= y <= height - segment_height:  
-        
+        if 0 <= x <= width - segment_width and 0 <= y <= height - segment_height:
             # Insert new segment into the list
             segment = Segment(x, y)
             self.segments.insert(0, segment)
@@ -70,6 +70,13 @@ class Snake:
         # .pop() command removes last item in list
             old_segment = self.segments.pop()
             self.sprites_list.remove(old_segment)
+
+    def grow(self):
+        x = self.end_snake.rect.x
+        y = self.end_snake.rect.y
+        segment = Segment(x, y)
+        self.segments.append(segment)
+        self.sprites_list.add(segment)
         
     
 class Segment(pygame.sprite.Sprite):
@@ -89,16 +96,6 @@ class Segment(pygame.sprite.Sprite):
         self.rect.y = y
 
 
-def check_food_spawn(food):
-    # Checks if the food spawns on a snake
-    food_spawn_collision = pygame.sprite.spritecollide(food, my_snake.segments, False)
-    if not food_spawn_collision:
-        return False
-    else:
-        print("there was a food spawn collision")
-        return True
-
-
 class Food:
     def __init__(self):
         self.image = pygame.Surface([segment_width, segment_height])
@@ -106,7 +103,7 @@ class Food:
         self.rect = self.image.get_rect()
         self.food_list = []
         self.food_items = pygame.sprite.Group()
-        number_foods = 20
+        number_foods = 5
         for i in range(number_foods):
             self.create_food()
 
@@ -140,7 +137,25 @@ class FoodItem(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
- 
+
+# Static functions here
+def check_food_spawn(food):
+    # Checks if the food spawns on a snake
+    food_spawn_collision = pygame.sprite.spritecollide(food, my_snake.segments, False)
+    if not food_spawn_collision:
+        return False
+    else:
+        print("there was a food spawn collision")
+        return True
+
+
+def check_snake_collisions():
+    hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
+    for x in range(len(hit_list)):
+        my_snake.grow()
+        food_onscreen.replenish()
+
+
 # Call this function so the Pygame library can initialize itself
 pygame.init()
  
@@ -192,9 +207,7 @@ while not done:
     food_onscreen.food_items.draw(screen)
 
     # Collision checking
-    hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
-    for x in range(len(hit_list)):
-        food_onscreen.replenish()
+    check_snake_collisions()
     
     # Flip screen
     pygame.display.flip()
