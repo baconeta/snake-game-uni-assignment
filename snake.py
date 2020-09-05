@@ -35,6 +35,10 @@ total_segments = int(width / (segment_width+segment_margin))
 x_change = segment_width + segment_margin
 y_change = 0
 
+# Somewhere here, determine some random obstacles
+possible_obstacles = [[0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]]  # x,y coordinates for drawn obstacles
+number_of_obstacles = 2
+
 
 class Snake:
     """ Class to represent one snake. """
@@ -43,14 +47,14 @@ class Snake:
     def __init__(self, starting_length):
         self.snake_length = starting_length
         self.segments = []
-        self.sprites_list = pygame.sprite.Group()
+        self.snake_pieces = pygame.sprite.Group()
 
         for i in range(0, self.snake_length):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
             y = (segment_height + segment_margin) * 2
             segment = Segment(x, y)
             self.segments.append(segment)
-            self.sprites_list.add(segment)
+            self.snake_pieces.add(segment)
 
     def move(self):
         # Figure out where new segment will be
@@ -62,21 +66,21 @@ class Snake:
             # Insert new segment into the list
             segment = Segment(x, y)
             self.segments.insert(0, segment)
-            self.sprites_list.add(segment)
+            self.snake_pieces.add(segment)
         # Get rid of last segment of the snake
         # .pop() command removes last item in list
             old_segment = self.segments.pop()
-            self.sprites_list.remove(old_segment)
+            self.snake_pieces.remove(old_segment)
         else:  # else if not ai_snake TODO
             print("game would end here but now nothing happens")
-            # game_end() function to run
+            # game_end() function to run TODO
 
     def grow(self):
         x = self.segments[-1].rect.x
         y = self.segments[-1].rect.y
         segment = Segment(x, y)
         self.segments.append(segment)
-        self.sprites_list.add(segment)
+        self.snake_pieces.add(segment)
 
 
 class Segment(pygame.sprite.Sprite):
@@ -97,9 +101,6 @@ class Segment(pygame.sprite.Sprite):
 
 class Food:
     def __init__(self):
-        self.image = pygame.Surface([segment_width, segment_height])
-        self.image.fill(WHITE)
-        self.rect = self.image.get_rect()
         self.food_list = []
         self.food_items = pygame.sprite.Group()
         number_foods = 5
@@ -132,6 +133,25 @@ class FoodItem(pygame.sprite.Sprite):
         self.image.fill(RED)
 
         # Set top-left corner of the bounding rectangle to be the passed-in location.
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Obstacle:
+    def __init__(self):
+        pass
+        # Randomly choose which obstacle is drawn
+        # For every index in that obstacle type, create the individual piece
+        # Hold every single obstacle piece in one group outside of this class for collision checking?
+        # Or have the class as OBSTACLES instead?
+
+
+class ObstaclePiece(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface([segment_width, segment_height])
+        self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -183,8 +203,9 @@ def process_input():
 
 def game_screen_drawing():
     screen.fill(BLACK)
-    my_snake.sprites_list.draw(screen)
+    my_snake.snake_pieces.draw(screen)
     food_onscreen.food_items.draw(screen)
+    #  Draw obstacles here TODO
     pygame.display.flip()
 
 
@@ -200,8 +221,11 @@ pygame.display.set_caption('Snake Game')
 # Create an initial snake
 my_snake = Snake(3)
 
-# Build list of initial food spots
+# Build list of initial food spots and obstacles
 food_onscreen = Food()
+obstacles = pygame.sprite.Group()
+for obs in range(number_of_obstacles):
+    pass  # TODO
 
 clock = pygame.time.Clock()
 game_done = False
