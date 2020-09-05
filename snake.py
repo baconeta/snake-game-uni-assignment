@@ -179,6 +179,13 @@ def process_input():
                 y_change = (segment_height + segment_margin)
 
 
+def game_screen_drawing():
+    screen.fill(BLACK)
+    my_snake.sprites_list.draw(screen)
+    food_onscreen.food_items.draw(screen)
+    pygame.display.flip()
+
+
 # Call this function so the Pygame library can initialize itself
 pygame.init()
  
@@ -200,18 +207,9 @@ game_done = False
 while not game_done:
     # Game loop
     process_input()
-    my_snake.move()
-    screen.fill(BLACK)
-    my_snake.sprites_list.draw(screen)
-    food_onscreen.food_items.draw(screen)
-
-    # Collision checking
     check_snake_collisions()
-    
-    # Flip screen
-    pygame.display.flip()
- 
-    # Pause
+    my_snake.move()
+    game_screen_drawing()
     clock.tick(10)
 
 pygame.quit()
