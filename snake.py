@@ -1,60 +1,59 @@
 """
- Snake Game template, using classes.
- 
- Derived from:
- Sample Python/Pygame Programs
- Simpson College Computer Science
- http://programarcadegames.com/
- http://simpson.edu/computer-science/
- 
+Snake Game template, using classes.
+
+Derived from:
+Sample Python/Pygame Programs
+Simpson College Computer Science
+http://programarcadegames.com/
+http://simpson.edu/computer-science/
 """
 
 import pygame
 import random
- 
+
 # --- Globals ---
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
- 
+
 # Screen size
 height = 600
 width = 600
- 
+
 # Margin between each segment
 segment_margin = 3
- 
+
 # Set the width and height of each snake segment
 segment_width = min(height, width) / 40 - segment_margin
 segment_height = min(height, width) / 40 - segment_margin
 total_segments = int(width / (segment_width+segment_margin))
 
- 
+
 # Set initial speed
 x_change = segment_width + segment_margin
 y_change = 0
- 
 
-class Snake:
+
+class Snake():
     """ Class to represent one snake. """
-    
+
     # Constructor
-    def __init__(self):
-        starting_length = 3
+    def __init__(self, starting_length):
+        self.snake_length = starting_length
         self.segments = []
         self.sprites_list = pygame.sprite.Group()
         self.end_snake = None
 
-        for i in range(0, starting_length):
+        for i in range(0, self.snake_length):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
             y = (segment_height + segment_margin) * 2
             segment = Segment(x, y)
             self.segments.append(segment)
             self.sprites_list.add(segment)
             self.end_snake = segment
-            
+
     def move(self):
         # Figure out where new segment will be
         x = self.segments[0].rect.x + x_change
@@ -77,19 +76,18 @@ class Snake:
         segment = Segment(x, y)
         self.segments.append(segment)
         self.sprites_list.add(segment)
-        
-    
+
+
 class Segment(pygame.sprite.Sprite):
     """ Class to represent one segment of a snake. """
     # Constructor
     def __init__(self, x, y):
         # Call the parent's constructor
         super().__init__()
- 
+
         # Set height, width
         self.image = pygame.Surface([segment_width, segment_height])
         self.image.fill(WHITE)
- 
         # Set top-left corner of the bounding rectangle to be the passed-in location.
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -188,19 +186,19 @@ def game_screen_drawing():
 
 # Call this function so the Pygame library can initialize itself
 pygame.init()
- 
+
 # Create a 600x600 sized screen
 screen = pygame.display.set_mode([width, height])
- 
+
 # Set the title of the window
 pygame.display.set_caption('Snake Game')
- 
+
 # Create an initial snake
-my_snake = Snake()
+my_snake = Snake(3)
 
 # Build list of initial food spots
 food_onscreen = Food()
- 
+
 clock = pygame.time.Clock()
 game_done = False
 
