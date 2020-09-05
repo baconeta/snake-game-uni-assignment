@@ -42,10 +42,11 @@ class Snake:
     
     # Constructor
     def __init__(self):
-        starting_length = 12
+        starting_length = 10
         self.segments = []
         self.sprites_list = pygame.sprite.Group()
-        for i in range(starting_length):
+
+        for i in range(0, starting_length):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
             y = (segment_height + segment_margin) * 2
             segment = Segment(x, y)
@@ -73,7 +74,6 @@ class Snake:
     
 class Segment(pygame.sprite.Sprite):
     """ Class to represent one segment of a snake. """
-
     # Constructor
     def __init__(self, x, y):
         # Call the parent's constructor
@@ -89,13 +89,24 @@ class Segment(pygame.sprite.Sprite):
         self.rect.y = y
 
 
+def check_food_spawn(food):
+    # Checks if the food spawns on a snake
+    food_spawn_collision = pygame.sprite.spritecollide(food, my_snake.segments, False)
+    if not food_spawn_collision:
+        return False
+    else:
+        print("there was a food spawn collision")
+        return True
+
+
 class Food:
-    def __init__(self, number_foods):
+    def __init__(self):
         self.image = pygame.Surface([segment_width, segment_height])
         self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.food_list = []
         self.food_items = pygame.sprite.Group()
+        number_foods = 20
         for i in range(number_foods):
             self.create_food()
 
@@ -106,8 +117,11 @@ class Food:
         y *= (segment_height + segment_margin)
         # To add a check that ensures it doesn't spawn on the snakes
         new_food = FoodItem(x, y)
-        self.food_list.append(new_food)
-        self.food_items.add(new_food)
+        if not check_food_spawn(new_food):
+            self.food_list.append(new_food)
+            self.food_items.add(new_food)
+        else:
+            self.create_food()
 
     def replenish(self):
         self.create_food()
@@ -140,8 +154,7 @@ pygame.display.set_caption('Snake Game')
 my_snake = Snake()
 
 # Build list of initial food spots
-number_of_food = 4
-food_onscreen = Food(number_of_food)
+food_onscreen = Food()
  
 clock = pygame.time.Clock()
 done = False
@@ -177,6 +190,11 @@ while not done:
     screen.fill(BLACK)
     my_snake.sprites_list.draw(screen)
     food_onscreen.food_items.draw(screen)
+
+    # Collision checking
+    hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
+    for x in range(len(hit_list)):
+        food_onscreen.replenish()
     
     # Flip screen
     pygame.display.flip()
