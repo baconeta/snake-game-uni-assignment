@@ -156,30 +156,11 @@ def check_snake_collisions():
         food_onscreen.replenish()
 
 
-# Call this function so the Pygame library can initialize itself
-pygame.init()
- 
-# Create a 600x600 sized screen
-screen = pygame.display.set_mode([width, height])
- 
-# Set the title of the window
-pygame.display.set_caption('Snake Game')
- 
-# Create an initial snake
-my_snake = Snake()
-
-# Build list of initial food spots
-food_onscreen = Food()
- 
-clock = pygame.time.Clock()
-done = False
- 
-while not done:
- 
+def process_input():
+    global game_done, x_change, y_change
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            done = True
- 
+            game_done = True
         # Set the direction based on the key pressed
         # We want the speed to be enough that we move a full
         # segment, plus the margin.
@@ -196,12 +177,30 @@ while not done:
             if event.key == pygame.K_DOWN:
                 x_change = 0
                 y_change = (segment_height + segment_margin)
+
+
+# Call this function so the Pygame library can initialize itself
+pygame.init()
  
-    # move snake one step
+# Create a 600x600 sized screen
+screen = pygame.display.set_mode([width, height])
+ 
+# Set the title of the window
+pygame.display.set_caption('Snake Game')
+ 
+# Create an initial snake
+my_snake = Snake()
+
+# Build list of initial food spots
+food_onscreen = Food()
+ 
+clock = pygame.time.Clock()
+game_done = False
+
+while not game_done:
+    # Game loop
+    process_input()
     my_snake.move()
-    
-    # -- Draw everything
-    # Clear screen
     screen.fill(BLACK)
     my_snake.sprites_list.draw(screen)
     food_onscreen.food_items.draw(screen)
@@ -214,5 +213,5 @@ while not done:
  
     # Pause
     clock.tick(10)
- 
+
 pygame.quit()
