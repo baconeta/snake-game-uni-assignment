@@ -44,7 +44,6 @@ class Snake:
         self.snake_length = starting_length
         self.segments = []
         self.sprites_list = pygame.sprite.Group()
-        self.end_snake = None
 
         for i in range(0, self.snake_length):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
@@ -52,7 +51,6 @@ class Snake:
             segment = Segment(x, y)
             self.segments.append(segment)
             self.sprites_list.add(segment)
-            self.end_snake = segment
 
     def move(self):
         # Figure out where new segment will be
@@ -69,13 +67,13 @@ class Snake:
         # .pop() command removes last item in list
             old_segment = self.segments.pop()
             self.sprites_list.remove(old_segment)
-        else:
+        else:  # else if not ai_snake TODO
             print("game would end here but now nothing happens")
             # game_end() function to run
 
     def grow(self):
-        x = self.end_snake.rect.x
-        y = self.end_snake.rect.y
+        x = self.segments[-1].rect.x
+        y = self.segments[-1].rect.y
         segment = Segment(x, y)
         self.segments.append(segment)
         self.sprites_list.add(segment)
@@ -109,8 +107,8 @@ class Food:
             self.create_food()
 
     def create_food(self):
-        x = random.randint(1, total_segments)
-        y = random.randint(1, total_segments)
+        x = random.randint(0, total_segments-1)
+        y = random.randint(0, total_segments-1)
         x *= (segment_width + segment_margin)
         y *= (segment_height + segment_margin)
         # To add a check that ensures it doesn't spawn on the snakes
@@ -146,7 +144,6 @@ def check_food_spawn(food):
     if not food_spawn_collision:
         return False
     else:
-        print("there was a food spawn collision")
         return True
 
 
