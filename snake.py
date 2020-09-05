@@ -36,7 +36,7 @@ x_change = segment_width + segment_margin
 y_change = 0
 
 
-class Snake():
+class Snake:
     """ Class to represent one snake. """
 
     # Constructor
@@ -60,7 +60,7 @@ class Snake():
         y = self.segments[0].rect.y + y_change
         # Don't move off the screen
         # At the moment a potential move off the screen means nothing happens, but it should end the game
-        if 0 <= x <= width - segment_width and 0 <= y <= height - segment_height:
+        if check_snake_head_onscreen(x, y):
             # Insert new segment into the list
             segment = Segment(x, y)
             self.segments.insert(0, segment)
@@ -69,6 +69,9 @@ class Snake():
         # .pop() command removes last item in list
             old_segment = self.segments.pop()
             self.sprites_list.remove(old_segment)
+        else:
+            print("game would end here but now nothing happens")
+            # game_end() function to run
 
     def grow(self):
         x = self.end_snake.rect.x
@@ -152,6 +155,10 @@ def check_snake_collisions():
     for x in range(len(hit_list)):
         my_snake.grow()
         food_onscreen.replenish()
+
+
+def check_snake_head_onscreen(head_x, head_y):
+    return 0 <= head_x <= width - segment_width and 0 <= head_y <= height - segment_height
 
 
 def process_input():
