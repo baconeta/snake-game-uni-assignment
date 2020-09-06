@@ -180,10 +180,15 @@ def check_food_spawn(food):
 
 
 def check_snake_collisions():
-    hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
-    for x in range(len(hit_list)):
+    # Check if the snake gets food
+    food_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
+    for x in range(len(food_hit_list)):
         my_snake.grow()
         food_onscreen.replenish()
+    # Check if the snake collides with an obstacle
+    obs_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], obstacles, False)
+    if obs_hit_list:
+        print("You would lose here but I'll add it later") # TODO
 
 
 def check_snake_head_onscreen(head_x, head_y):
