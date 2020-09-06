@@ -40,17 +40,16 @@ y_change = 0
 possible_obstacles = [
     [[-1, 0], [0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]],
     [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [4, 2], [4, 1], [4, 0]],
-    [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 1], [1, 2], [1, 3], [1, 4], [2, 2], [2, 3], [2, 4], [3, 3], [3, 4], [4, 4]]
+    [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 1], [1, 2], [1, 3], [1, 4], [2, 2], [2, 3], [2, 4], [3, 3], [3, 4], [4, 4]],
+    [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]]
 ]
-number_of_obstacles = 3
+number_of_obstacles = random.randint(4, 7)
 # TODO add some way to make sure obstacles are placed not too closely
 # TODO make sure original snake position can't be drawn on with obstacles
 
 
 class Snake:
     """ Class to represent one snake. """
-
-    # Constructor
     def __init__(self, starting_length):
         self.snake_length = starting_length
         self.segments = []
@@ -188,7 +187,11 @@ def check_snake_collisions():
     # Check if the snake collides with an obstacle
     obs_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], obstacles, False)
     if obs_hit_list:
-        print("You would lose here but I'll add it later") # TODO
+        print("You would lose here but I'll add it later")  # TODO
+    # Check if the snake collides with it's own tail
+    tail_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], my_snake.segments[1:], False)
+    if tail_hit_list:
+        print("You would be suiciding here but I'll add it later")  # TODO
 
 
 def check_snake_head_onscreen(head_x, head_y):
