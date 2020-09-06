@@ -33,11 +33,11 @@ segment_height = min(game_screen_height, game_screen_width) / 40 - segment_margi
 total_segments_w = int(game_screen_width / (segment_width + segment_margin))
 total_segments_h = int(game_screen_width / (segment_width + segment_margin))
 
-# Set initial speed
-x_change = segment_width + segment_margin
-y_change = 0
+# Set initial directions
+player_x_change, enemy_x_change = segment_width + segment_margin, segment_width + segment_margin
+player_y_change, enemy_y_change = 0, 0
 
-# Somewhere here, determine some random obstacles
+# Create obstacle designs
 possible_obstacles = [
     [[-1, 0], [0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]],
     [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [4, 2], [4, 1], [4, 0]],
@@ -46,24 +46,29 @@ possible_obstacles = [
 ]
 # TODO add some way to make sure obstacles are placed not too closely OPTIONAL
 # TODO make sure original snake position can't be drawn on with obstacles IMPORTANT
+# TODO add obstacle rotations? OPTIONAL
 
 
 class Snake:
     """ Class to represent one snake. """
-    def __init__(self, starting_length):
+    def __init__(self, starting_length, is_player):
         self.snake_length = starting_length
         self.segments = []
         self.snake_pieces = pygame.sprite.Group()
-        self.player = True
+        self.player = is_player
 
         for i in range(0, self.snake_length):
-            x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
-            y = (segment_height + segment_margin) * 2
+            if self.player:
+                x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
+                y = (segment_height + segment_margin) * 2
+            else:
+                x = (segment_width + segment_margin) * 4 - (segment_width + segment_margin) * i
+                y = (segment_height + segment_margin) * 30
             segment = Segment(x, y, self.player)
             self.segments.append(segment)
             self.snake_pieces.add(segment)
 
-    def move(self):
+    def move(self, x_change, y_change):
         global game_lost
         # Figure out where new segment will be
         x = self.segments[0].rect.x + x_change
@@ -185,18 +190,21 @@ def check_food_spawn(food):
     return spawn_collision
 
 
-def check_snake_collisions():
+def check_player_collisions():
     global game_lost, current_score
+
     # Check if the snake gets food
     food_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
     for x in food_hit_list:
         current_score += x.score_value
         my_snake.grow()
         food_onscreen.replenish()
+
     # Check if the snake collides with an obstacle or it's own tail
     obs_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], obstacles, False)
     tail_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], my_snake.segments[1:], False)
-    if obs_hit_list or tail_hit_list:
+    enemy_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], enemy_snake.snake_pieces, False)
+    if obs_hit_list or tail_hit_list or enemy_hit_list:
         game_lost = True
 
 
@@ -204,32 +212,89 @@ def check_snake_head_onscreen(head_x, head_y):
     return 0 <= head_x <= game_screen_width - segment_width and 0 <= head_y <= game_screen_height - segment_height
 
 
+def move_enemy_snake(direction):
+    global enemy_x_change, enemy_y_change, enemy_move
+    if direction == "left":
+        enemy_x_change = (segment_width + segment_margin) * -1
+        enemy_y_change = 0
+        enemy_move = "left"
+    elif direction == "right":
+        enemy_x_change = (segment_width + segment_margin)
+        enemy_y_change = 0
+        enemy_move = "right"
+    elif direction == "up":
+        enemy_x_change = 0
+        enemy_y_change = (segment_height + segment_margin) * -1
+        enemy_move = "up"
+    elif direction == "down":
+        enemy_x_change = 0
+        enemy_y_change = (segment_height + segment_margin)
+        enemy_move = "down"
+    enemy_snake.move(enemy_x_change, enemy_y_change)
+
+
+def ai_movement():
+    global enemy_move
+    if not safe_next_move():
+        if enemy_move == "left" or enemy_move == "right":
+            # try up and down fairly
+            x = random.randint(0, 1)
+            if x == 0:
+                move_enemy_snake("up")
+            else:
+                move_enemy_snake("down")
+        elif enemy_move == "up" or enemy_move == "down":
+            # try up and down fairly
+            x = random.randint(0, 1)
+            if x == 0:
+                move_enemy_snake("left")
+            else:
+                move_enemy_snake("right")
+    else:
+        move_enemy_snake(enemy_move)
+
+
+def get_snake_position(snake):
+    return snake.snake_pieces[0].rect.x, snake.snake_pieces[0].rect.y
+
+
+def safe_next_move():
+    # Checks if the enemies next move is safe or not
+    enemy_snake.segments[0].rect.x += enemy_x_change
+    enemy_snake.segments[0].rect.y += enemy_y_change
+    obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
+    if not obstacle_hit_list:
+        enemy_snake.segments[0].rect.x -= enemy_x_change
+        enemy_snake.segments[0].rect.y -= enemy_y_change
+        return True
+    else:
+        return False
+
+
 def process_input():
-    global game_quit, x_change, y_change
+    global game_quit, player_x_change, player_y_change
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_quit = True
-        # Set the direction based on the key pressed
-        # We want the speed to be enough that we move a full
-        # segment, plus the margin.
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                x_change = (segment_width + segment_margin) * -1
-                y_change = 0
+                player_x_change = (segment_width + segment_margin) * -1
+                player_y_change = 0
             if event.key == pygame.K_RIGHT:
-                x_change = (segment_width + segment_margin)
-                y_change = 0
+                player_x_change = (segment_width + segment_margin)
+                player_y_change = 0
             if event.key == pygame.K_UP:
-                x_change = 0
-                y_change = (segment_height + segment_margin) * -1
+                player_x_change = 0
+                player_y_change = (segment_height + segment_margin) * -1
             if event.key == pygame.K_DOWN:
-                x_change = 0
-                y_change = (segment_height + segment_margin)
+                player_x_change = 0
+                player_y_change = (segment_height + segment_margin)
 
 
 def game_play_drawing():
     screen.fill(BLACK)
     my_snake.snake_pieces.draw(screen)
+    enemy_snake.snake_pieces.draw(screen)
     food_onscreen.food_items.draw(screen)
     obstacles.draw(screen)
     draw_score()
@@ -265,10 +330,11 @@ score_font = pygame.font.SysFont("Courier", 48)
 
 # Create an initial snake
 snake_starting_size = 3
-my_snake = Snake(snake_starting_size)
+my_snake = Snake(snake_starting_size, True)
 
 # Add an AI snake
-enemy_snake = Snake(snake_starting_size)
+enemy_snake = Snake(snake_starting_size, False)
+enemy_move = "right"
 
 # Build list of initial food spots and obstacles
 obstacles = pygame.sprite.Group()
@@ -287,8 +353,9 @@ while not game_quit:
     # Game loop
     process_input()
     if not game_lost:
-        my_snake.move()
-        check_snake_collisions()
+        my_snake.move(player_x_change, player_y_change)
+        ai_movement()
+        check_player_collisions()
     game_play_drawing()
     clock.tick(10)
 
