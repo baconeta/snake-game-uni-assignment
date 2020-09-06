@@ -250,6 +250,9 @@ def ai_movement():
     if not safe_next_move() or random.randint(0, 10) == 0:  # Randomly move sometimes too
         change_enemy_direction()
     else:
+        if random.randint(1, 50) == 50:
+            # Randomly grows over time
+            enemy_snake.grow()
         move_enemy_snake(enemy_move)
 
 
