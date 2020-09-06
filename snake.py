@@ -17,6 +17,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
 # Screen size
 game_screen_height = 600
@@ -40,7 +41,7 @@ y_change = 0
 possible_obstacles = [
     [[-1, 0], [0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]],
     [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [4, 2], [4, 1], [4, 0]],
-    [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 1], [1, 2], [1, 3], [1, 4], [2, 2], [2, 3], [2, 4], [3, 3], [3, 4], [4, 4]],
+    [[0, 0], [0, 1], [0, 2], [0, 3], [1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3]],
     [[0, 0], [1, 1], [2, 2], [3, 3]]
 ]
 # TODO add some way to make sure obstacles are placed not too closely OPTIONAL
@@ -53,11 +54,12 @@ class Snake:
         self.snake_length = starting_length
         self.segments = []
         self.snake_pieces = pygame.sprite.Group()
+        self.player = True
 
         for i in range(0, self.snake_length):
             x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
             y = (segment_height + segment_margin) * 2
-            segment = Segment(x, y)
+            segment = Segment(x, y, self.player)
             self.segments.append(segment)
             self.snake_pieces.add(segment)
 
@@ -69,7 +71,7 @@ class Snake:
 
         if check_snake_head_onscreen(x, y):
             # Insert new segment into the list
-            segment = Segment(x, y)
+            segment = Segment(x, y, self.player)
             self.segments.insert(0, segment)
             self.snake_pieces.add(segment)
             # Get rid of last segment of the snake
@@ -81,7 +83,7 @@ class Snake:
     def grow(self):
         x = self.segments[-1].rect.x
         y = self.segments[-1].rect.y
-        segment = Segment(x, y)
+        segment = Segment(x, y, self.player)
         self.segments.append(segment)
         self.snake_pieces.add(segment)
 
@@ -89,13 +91,16 @@ class Snake:
 class Segment(pygame.sprite.Sprite):
     """ Class to represent one segment of a snake. """
     # Constructor
-    def __init__(self, x, y):
+    def __init__(self, x, y, player):
         # Call the parent's constructor
         super().__init__()
-
+        if player:
+            segment_colour = WHITE
+        else:
+            segment_colour = BLUE
         # Set height, width
         self.image = pygame.Surface([segment_width, segment_height])
-        self.image.fill(WHITE)
+        self.image.fill(segment_colour)
         # Set top-left corner of the bounding rectangle to be the passed-in location.
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -261,6 +266,9 @@ score_font = pygame.font.SysFont("Courier", 48)
 # Create an initial snake
 snake_starting_size = 3
 my_snake = Snake(snake_starting_size)
+
+# Add an AI snake
+enemy_snake = Snake(snake_starting_size)
 
 # Build list of initial food spots and obstacles
 obstacles = pygame.sprite.Group()
