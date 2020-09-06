@@ -114,7 +114,6 @@ class Segment(pygame.sprite.Sprite):
 
 class Food:
     def __init__(self):
-        self.food_list = []
         self.food_items = pygame.sprite.Group()
         number_foods = 5
         for i in range(number_foods):
@@ -128,7 +127,6 @@ class Food:
         # To add a check that ensures it doesn't spawn on the snakes
         new_food = FoodItem(x, y)
         if not check_food_spawn(new_food):
-            self.food_list.append(new_food)
             self.food_items.add(new_food)
         else:
             self.create_food()
@@ -286,9 +284,10 @@ def safe_next_move():
     enemy_snake.segments[0].rect.y += enemy_y_change
     obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
     player_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], my_snake.snake_pieces, False)
+    # body_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], enemy_snake.segments[1:], False)
     enemy_snake.segments[0].rect.x -= enemy_x_change
     enemy_snake.segments[0].rect.y -= enemy_y_change
-    if obstacle_hit_list or player_hit_list:
+    if obstacle_hit_list or player_hit_list:  # or body_hit_list
         return False
     return True
 
