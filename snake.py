@@ -21,8 +21,7 @@ GREEN = (0, 255, 0)
 # Screen size
 game_screen_height = 600
 game_screen_width = 600
-screen_height = 650
-screen_width = 600
+hud_height = 50
 
 # Margin between each segment
 segment_margin = 3
@@ -44,9 +43,8 @@ possible_obstacles = [
     [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 1], [1, 2], [1, 3], [1, 4], [2, 2], [2, 3], [2, 4], [3, 3], [3, 4], [4, 4]],
     [[0, 0], [1, 1], [2, 2], [3, 3]]
 ]
-number_of_obstacles = random.randint(4, 7)
-# TODO add some way to make sure obstacles are placed not too closely
-# TODO make sure original snake position can't be drawn on with obstacles
+# TODO add some way to make sure obstacles are placed not too closely OPTIONAL
+# TODO make sure original snake position can't be drawn on with obstacles IMPORTANT
 
 
 class Snake:
@@ -243,7 +241,7 @@ def draw_score():
     score_text = score_font.render("Score: " + str(current_score), True, WHITE)
     score_text_rect = score_text.get_rect()
     score_text_rect.center = (150, 630)
-    pygame.draw.line(screen, WHITE, (0, game_screen_height), (screen_width, game_screen_height), 1)
+    pygame.draw.line(screen, WHITE, (0, game_screen_height), (game_screen_width, game_screen_height), 1)
     screen.blit(score_text, score_text_rect)
 
 
@@ -251,10 +249,14 @@ def draw_score():
 pygame.init()
 
 # Create a 600x600 sized screen
-screen = pygame.display.set_mode([screen_width, screen_height])
+screen = pygame.display.set_mode([game_screen_width, game_screen_height + hud_height])
 
 # Set the title of the window
 pygame.display.set_caption('Snake Game')
+
+# Fonts
+game_over_font = pygame.font.Font(None, 72)
+score_font = pygame.font.SysFont("Courier", 48)
 
 # Create an initial snake
 snake_starting_size = 3
@@ -262,6 +264,7 @@ my_snake = Snake(snake_starting_size)
 
 # Build list of initial food spots and obstacles
 obstacles = pygame.sprite.Group()
+number_of_obstacles = random.randint(4, 7)
 for obs in range(number_of_obstacles):
     Obstacle()
 food_onscreen = Food()
@@ -270,8 +273,6 @@ food_onscreen = Food()
 clock = pygame.time.Clock()
 game_quit = False
 game_lost = False
-game_over_font = pygame.font.Font(None, 72)
-score_font = pygame.font.SysFont("Courier", 48)
 current_score = 0
 
 while not game_quit:
