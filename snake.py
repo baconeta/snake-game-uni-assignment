@@ -68,15 +68,13 @@ class Snake:
         # Figure out where new segment will be
         x = self.segments[0].rect.x + x_change
         y = self.segments[0].rect.y + y_change
-        # Don't move off the screen
-        # At the moment a potential move off the screen means nothing happens, but it should end the game
+
         if check_snake_head_onscreen(x, y):
             # Insert new segment into the list
             segment = Segment(x, y)
             self.segments.insert(0, segment)
             self.snake_pieces.add(segment)
-        # Get rid of last segment of the snake
-        # .pop() command removes last item in list
+            # Get rid of last segment of the snake
             old_segment = self.segments.pop()
             self.snake_pieces.remove(old_segment)
         else:  # else if not ai_snake TODO
@@ -144,6 +142,8 @@ class FoodItem(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
 
+        self.score_value = 10
+
 
 class Obstacle:
     def __init__(self):
@@ -183,10 +183,11 @@ def check_food_spawn(food):
 
 
 def check_snake_collisions():
-    global game_lost
+    global game_lost, current_score
     # Check if the snake gets food
     food_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
-    for x in range(len(food_hit_list)):
+    for x in food_hit_list:
+        current_score += x.score_value
         my_snake.grow()
         food_onscreen.replenish()
     # Check if the snake collides with an obstacle or it's own tail
