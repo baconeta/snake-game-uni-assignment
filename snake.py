@@ -169,12 +169,15 @@ class ObstaclePiece(pygame.sprite.Sprite):
 
 # Static functions here
 def check_food_spawn(food):
-    # Checks if the food spawns on a snake
-    food_spawn_collision = pygame.sprite.spritecollide(food, my_snake.segments, False)
-    if not food_spawn_collision:
-        return False
-    else:
-        return True
+    # Checks if the food spawns on a snake or obstacle
+    spawn_collision = False
+    food_snake_coll = pygame.sprite.spritecollide(food, my_snake.segments, False)
+    if food_snake_coll:
+        spawn_collision = True
+    food_obstacle_coll = pygame.sprite.spritecollide(food, obstacles, False)
+    if food_obstacle_coll:
+        spawn_collision = True
+    return spawn_collision
 
 
 def check_snake_collisions():
@@ -198,10 +201,10 @@ def check_snake_head_onscreen(head_x, head_y):
 
 
 def process_input():
-    global game_done, x_change, y_change
+    global game_quit, x_change, y_change
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            game_done = True
+            game_quit = True
         # Set the direction based on the key pressed
         # We want the speed to be enough that we move a full
         # segment, plus the margin.
@@ -220,11 +223,14 @@ def process_input():
                 y_change = (segment_height + segment_margin)
 
 
-def game_screen_drawing():
+def game_play_drawing():
     screen.fill(BLACK)
     my_snake.snake_pieces.draw(screen)
     food_onscreen.food_items.draw(screen)
     obstacles.draw(screen)
+    if game_lost:
+        # do something TODO
+        pass
     pygame.display.flip()
 
 
@@ -238,24 +244,27 @@ screen = pygame.display.set_mode([width, height])
 pygame.display.set_caption('Snake Game')
 
 # Create an initial snake
-my_snake = Snake(3)
+snake_starting_size = 3
+my_snake = Snake(snake_starting_size)
 
 # Build list of initial food spots and obstacles
-food_onscreen = Food()
 obstacles = pygame.sprite.Group()
 for obs in range(number_of_obstacles):
     Obstacle()
+food_onscreen = Food()
 
-
+# Game variables
 clock = pygame.time.Clock()
-game_done = False
+game_quit = False
+game_lost = False
 
-while not game_done:
+while not game_quit:
     # Game loop
-    process_input()
-    check_snake_collisions()
-    my_snake.move()
-    game_screen_drawing()
+    if not game_lost:
+        process_input()
+        check_snake_collisions()
+        my_snake.move()
+    game_play_drawing()
     clock.tick(10)
 
 pygame.quit()
