@@ -133,9 +133,11 @@ class Food:
         else:
             self.create_food()
 
-    def replenish(self):
+    def replenish(self, player_obtained):
+        # Adds a random chance for the food to disappear and not replenish (increase difficulty overtime)
+        if random.randint(1, 3) == 1 and len(self.food_items) > 1 and not player_obtained:
+            return
         self.create_food()
-        # can add complication here later if I want
 
 
 class FoodItem(pygame.sprite.Sprite):
@@ -192,13 +194,17 @@ def check_food_spawn(food):
 
 def check_player_collisions():
     global game_lost, current_score
-
     # Check if the snake gets food
     food_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
+    enemy_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], food_onscreen.food_items, True)
     for x in food_hit_list:
         current_score += x.score_value
         my_snake.grow()
-        food_onscreen.replenish()
+        food_onscreen.replenish(True)
+    for x in enemy_hit_list:
+        current_score -= x.score_value
+        enemy_snake.grow()
+        food_onscreen.replenish(False)
 
     # Check if the snake collides with an obstacle or it's own tail
     obs_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], obstacles, False)
@@ -230,6 +236,8 @@ def move_enemy_snake(direction):
         enemy_x_change = 0
         enemy_y_change = (segment_height + segment_margin)
         enemy_move = "down"
+
+    # To account for the new movement not being legal, try it again
     if safe_next_move():
         enemy_snake.move(enemy_x_change, enemy_y_change)
     else:
@@ -237,8 +245,9 @@ def move_enemy_snake(direction):
 
 
 def ai_movement():
+    # TODO add some intelligence using a search algorithm?
     global enemy_move
-    if not safe_next_move():
+    if not safe_next_move() or random.randint(0, 10) == 0:  # Randomly move sometimes too
         change_enemy_direction()
     else:
         move_enemy_snake(enemy_move)
@@ -246,6 +255,7 @@ def ai_movement():
 
 def change_enemy_direction():
     global enemy_move
+    # Currently the snake cannot trap himself as he can walk through his own body if required
     if enemy_move == "left" or enemy_move == "right":
         # try up and down fairly
         x = random.randint(0, 1)
@@ -262,12 +272,9 @@ def change_enemy_direction():
             move_enemy_snake("right")
 
 
-def get_snake_position(snake):
-    return snake.snake_pieces[0].rect.x, snake.snake_pieces[0].rect.y
-
-
 def safe_next_move():
     # Checks if the enemies next move is safe or not
+    # TODO completely rewrite this section to make it smarter
     x = enemy_snake.segments[0].rect.x + enemy_x_change
     y = enemy_snake.segments[0].rect.y + enemy_y_change
     if not check_snake_head_onscreen(x, y):
@@ -275,9 +282,10 @@ def safe_next_move():
     enemy_snake.segments[0].rect.x += enemy_x_change
     enemy_snake.segments[0].rect.y += enemy_y_change
     obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
+    player_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], my_snake.snake_pieces, False)
     enemy_snake.segments[0].rect.x -= enemy_x_change
     enemy_snake.segments[0].rect.y -= enemy_y_change
-    if obstacle_hit_list:
+    if obstacle_hit_list or player_hit_list:
         return False
     return True
 
@@ -340,11 +348,12 @@ game_over_font = pygame.font.Font(None, 72)
 score_font = pygame.font.SysFont("Courier", 48)
 
 # Create an initial snake
-snake_starting_size = 3
-my_snake = Snake(snake_starting_size, True)
+player_init_size = 3
+my_snake = Snake(player_init_size, True)
 
 # Add an AI snake
-enemy_snake = Snake(snake_starting_size, False)
+enemy_init_size = 8
+enemy_snake = Snake(enemy_init_size, False)
 enemy_move = "right"
 
 # Build list of initial food spots and obstacles
