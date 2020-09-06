@@ -82,7 +82,7 @@ class Snake:
             # Get rid of last segment of the snake
             old_segment = self.segments.pop()
             self.snake_pieces.remove(old_segment)
-        else:  # else if not ai_snake TODO
+        elif self.player:
             game_lost = True
 
     def grow(self):
@@ -230,28 +230,36 @@ def move_enemy_snake(direction):
         enemy_x_change = 0
         enemy_y_change = (segment_height + segment_margin)
         enemy_move = "down"
-    enemy_snake.move(enemy_x_change, enemy_y_change)
+    if safe_next_move():
+        enemy_snake.move(enemy_x_change, enemy_y_change)
+    else:
+        change_enemy_direction()
 
 
 def ai_movement():
     global enemy_move
     if not safe_next_move():
-        if enemy_move == "left" or enemy_move == "right":
-            # try up and down fairly
-            x = random.randint(0, 1)
-            if x == 0:
-                move_enemy_snake("up")
-            else:
-                move_enemy_snake("down")
-        elif enemy_move == "up" or enemy_move == "down":
-            # try up and down fairly
-            x = random.randint(0, 1)
-            if x == 0:
-                move_enemy_snake("left")
-            else:
-                move_enemy_snake("right")
+        change_enemy_direction()
     else:
         move_enemy_snake(enemy_move)
+
+
+def change_enemy_direction():
+    global enemy_move
+    if enemy_move == "left" or enemy_move == "right":
+        # try up and down fairly
+        x = random.randint(0, 1)
+        if x == 0:
+            move_enemy_snake("up")
+        else:
+            move_enemy_snake("down")
+    elif enemy_move == "up" or enemy_move == "down":
+        # try up and down fairly
+        x = random.randint(0, 1)
+        if x == 0:
+            move_enemy_snake("left")
+        else:
+            move_enemy_snake("right")
 
 
 def get_snake_position(snake):
@@ -260,15 +268,18 @@ def get_snake_position(snake):
 
 def safe_next_move():
     # Checks if the enemies next move is safe or not
+    x = enemy_snake.segments[0].rect.x + enemy_x_change
+    y = enemy_snake.segments[0].rect.y + enemy_y_change
+    if not check_snake_head_onscreen(x, y):
+        return False
     enemy_snake.segments[0].rect.x += enemy_x_change
     enemy_snake.segments[0].rect.y += enemy_y_change
     obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
-    if not obstacle_hit_list:
-        enemy_snake.segments[0].rect.x -= enemy_x_change
-        enemy_snake.segments[0].rect.y -= enemy_y_change
-        return True
-    else:
+    enemy_snake.segments[0].rect.x -= enemy_x_change
+    enemy_snake.segments[0].rect.y -= enemy_y_change
+    if obstacle_hit_list:
         return False
+    return True
 
 
 def process_input():
