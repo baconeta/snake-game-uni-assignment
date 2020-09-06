@@ -28,7 +28,8 @@ segment_margin = 3
 # Set the width and height of each snake segment
 segment_width = min(height, width) / 40 - segment_margin
 segment_height = min(height, width) / 40 - segment_margin
-total_segments = int(width / (segment_width+segment_margin))
+total_segments_w = int(width / (segment_width + segment_margin))
+total_segments_h = int(width / (segment_width+segment_margin))
 
 
 # Set initial speed
@@ -36,8 +37,14 @@ x_change = segment_width + segment_margin
 y_change = 0
 
 # Somewhere here, determine some random obstacles
-possible_obstacles = [[0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]]  # x,y coordinates for drawn obstacles
-number_of_obstacles = 2
+possible_obstacles = [
+    [[-1, 0], [0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]],
+    [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [4, 2], [4, 1], [4, 0]],
+    [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 1], [1, 2], [1, 3], [1, 4], [2, 2], [2, 3], [2, 4], [3, 3], [3, 4], [4, 4]]
+]
+number_of_obstacles = 3
+# TODO add some way to make sure obstacles are placed not too closely
+# TODO make sure original snake position can't be drawn on with obstacles
 
 
 class Snake:
@@ -108,8 +115,8 @@ class Food:
             self.create_food()
 
     def create_food(self):
-        x = random.randint(0, total_segments-1)
-        y = random.randint(0, total_segments-1)
+        x = random.randint(0, total_segments_w - 1)
+        y = random.randint(0, total_segments_w - 1)
         x *= (segment_width + segment_margin)
         y *= (segment_height + segment_margin)
         # To add a check that ensures it doesn't spawn on the snakes
@@ -140,11 +147,16 @@ class FoodItem(pygame.sprite.Sprite):
 
 class Obstacle:
     def __init__(self):
-        pass
         # Randomly choose which obstacle is drawn
-        # For every index in that obstacle type, create the individual piece
-        # Hold every single obstacle piece in one group outside of this class for collision checking?
-        # Or have the class as OBSTACLES instead?
+        random_obstacle = random.randint(0, len(possible_obstacles)-1)
+        #  Choose a block number to have the origin spot from (the numbers are based on obstacle shapes for now)
+        origin_block_x = random.randint(1, total_segments_w - 3)
+        origin_block_y = random.randint(3, total_segments_h - 3)
+        for x in possible_obstacles[random_obstacle]:
+            rel_x = (origin_block_x + x[0]) * (segment_width + segment_margin)
+            rel_y = (origin_block_y + x[1]) * (segment_height + segment_margin)
+            new_obst_piece = ObstaclePiece(rel_x, rel_y)
+            obstacles.add(new_obst_piece)
 
 
 class ObstaclePiece(pygame.sprite.Sprite):
@@ -205,7 +217,7 @@ def game_screen_drawing():
     screen.fill(BLACK)
     my_snake.snake_pieces.draw(screen)
     food_onscreen.food_items.draw(screen)
-    #  Draw obstacles here TODO
+    obstacles.draw(screen)
     pygame.display.flip()
 
 
@@ -225,7 +237,8 @@ my_snake = Snake(3)
 food_onscreen = Food()
 obstacles = pygame.sprite.Group()
 for obs in range(number_of_obstacles):
-    pass  # TODO
+    Obstacle()
+
 
 clock = pygame.time.Clock()
 game_done = False
