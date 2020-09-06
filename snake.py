@@ -62,6 +62,7 @@ class Snake:
             self.snake_pieces.add(segment)
 
     def move(self):
+        global game_lost
         # Figure out where new segment will be
         x = self.segments[0].rect.x + x_change
         y = self.segments[0].rect.y + y_change
@@ -77,8 +78,7 @@ class Snake:
             old_segment = self.segments.pop()
             self.snake_pieces.remove(old_segment)
         else:  # else if not ai_snake TODO
-            print("game would end here but now nothing happens")
-            # game_end() function to run TODO
+            game_lost = True
 
     def grow(self):
         x = self.segments[-1].rect.x
@@ -181,19 +181,17 @@ def check_food_spawn(food):
 
 
 def check_snake_collisions():
+    global game_lost
     # Check if the snake gets food
     food_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], food_onscreen.food_items, True)
     for x in range(len(food_hit_list)):
         my_snake.grow()
         food_onscreen.replenish()
-    # Check if the snake collides with an obstacle
+    # Check if the snake collides with an obstacle or it's own tail
     obs_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], obstacles, False)
-    if obs_hit_list:
-        print("You would lose here but I'll add it later")  # TODO
-    # Check if the snake collides with it's own tail
     tail_hit_list = pygame.sprite.spritecollide(my_snake.segments[0], my_snake.segments[1:], False)
-    if tail_hit_list:
-        print("You would be suiciding here but I'll add it later")  # TODO
+    if obs_hit_list or tail_hit_list:
+        game_lost = True
 
 
 def check_snake_head_onscreen(head_x, head_y):
@@ -229,8 +227,11 @@ def game_play_drawing():
     food_onscreen.food_items.draw(screen)
     obstacles.draw(screen)
     if game_lost:
-        # do something TODO
-        pass
+        game_over_text = font.render("Game Over", True, WHITE, BLACK)
+        text_rect = game_over_text.get_rect()
+        text_x = screen.get_width() / 2 - text_rect.width / 2
+        text_y = screen.get_height() / 2 - text_rect.height / 2
+        screen.blit(game_over_text, [text_x, text_y])
     pygame.display.flip()
 
 
@@ -253,17 +254,18 @@ for obs in range(number_of_obstacles):
     Obstacle()
 food_onscreen = Food()
 
-# Game variables
+# Game variables and setup
 clock = pygame.time.Clock()
 game_quit = False
 game_lost = False
+font = pygame.font.Font(None, 72)
 
 while not game_quit:
     # Game loop
+    process_input()
     if not game_lost:
-        process_input()
-        check_snake_collisions()
         my_snake.move()
+        check_snake_collisions()
     game_play_drawing()
     clock.tick(10)
 
