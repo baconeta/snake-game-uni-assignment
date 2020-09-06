@@ -31,7 +31,6 @@ segment_height = min(height, width) / 40 - segment_margin
 total_segments_w = int(width / (segment_width + segment_margin))
 total_segments_h = int(width / (segment_width+segment_margin))
 
-
 # Set initial speed
 x_change = segment_width + segment_margin
 y_change = 0
