@@ -77,7 +77,7 @@ class Snake:
         x = self.segments[0].rect.x + x_change
         y = self.segments[0].rect.y + y_change
 
-        if self.check_head_onscreen():
+        if self.check_head_onscreen(x_change, y_change):
             # Insert new segment into the list
             segment = Segment(x, y, self.player)
             self.segments.insert(0, segment)
@@ -95,9 +95,9 @@ class Snake:
         self.segments.append(segment)
         self.snake_pieces.add(segment)
 
-    def check_head_onscreen(self):
-        x = self.segments[0].rect.x
-        y = self.segments[0].rect.y
+    def check_head_onscreen(self, x_change, y_change):
+        x = self.segments[0].rect.x + x_change
+        y = self.segments[0].rect.y + y_change
         return 0 <= x <= game_screen_width - segment_width and 0 <= y <= game_screen_height - segment_height
 
 
@@ -250,14 +250,14 @@ def set_enemy_down():
 
 def move_enemy_snake(direction):
     global enemy_x_change, enemy_y_change, enemy_move
-    if direction == "left":
-        set_enemy_left()
-    elif direction == "right":
-        set_enemy_right()
-    elif direction == "up":
-        set_enemy_up()
-    elif direction == "down":
-        set_enemy_down()
+    # if direction == "left":
+    #     set_enemy_left()
+    # elif direction == "right":
+    #     set_enemy_right()
+    # elif direction == "up":
+    #     set_enemy_up()
+    # elif direction == "down":
+    #     set_enemy_down()
 
     # To account for the new movement not being legal, try it again
     if safe_next_move():
@@ -289,10 +289,10 @@ def enemy_distance_weighting(direction):
         set_enemy_down()
     current_pos_x = enemy_snake.segments[0].rect.x
     current_pos_y = enemy_snake.segments[0].rect.y
-    weighted_multiplier, weighted_score = search_path()
+    direction_weight = search_path()
     enemy_snake.segments[0].rect.x = current_pos_x
     enemy_snake.segments[0].rect.y = current_pos_y
-    return weighted_score * weighted_multiplier
+    return direction_weight
 
 
 def search_path():
@@ -302,7 +302,7 @@ def search_path():
     while True:  # Until the snake would hit an obstacle/go off screen
         enemy_snake.segments[0].rect.x += enemy_x_change
         enemy_snake.segments[0].rect.y += enemy_y_change
-        if not enemy_snake.check_head_onscreen():
+        if not enemy_snake.check_head_onscreen(enemy_x_change, enemy_y_change):
             break
         obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
         if obstacle_hit_list:
@@ -314,7 +314,7 @@ def search_path():
         player_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], my_snake.snake_pieces, False)
         if player_hit_list:
             weighted_multiplier += 1.5  # To give priority for the snake to move towards the player
-    return weighted_multiplier, weighted_score
+    return weighted_multiplier * weighted_score
 
 
 def change_enemy_direction():
@@ -324,16 +324,20 @@ def change_enemy_direction():
         opt1 = enemy_distance_weighting("up")
         opt2 = enemy_distance_weighting("down")
         if opt1 >= opt2:
+            set_enemy_up()
             move_enemy_snake("up")
         else:
+            set_enemy_down()
             move_enemy_snake("down")
 
     elif enemy_move == "up" or enemy_move == "down":
         opt1 = enemy_distance_weighting("left")
         opt2 = enemy_distance_weighting("right")
         if opt1 >= opt2:
+            set_enemy_left()
             move_enemy_snake("left")
         else:
+            set_enemy_right()
             move_enemy_snake("right")
 
 
@@ -341,7 +345,7 @@ def safe_next_move():
     # Checks if the enemies next move is safe or not
     # TODO completely rewrite this section to make it smarter
     # TODO make it so the snake cannot double back on itself but also not trap itself....
-    if not enemy_snake.check_head_onscreen():
+    if not enemy_snake.check_head_onscreen(enemy_x_change, enemy_y_change):
         return False
     enemy_snake.segments[0].rect.x += enemy_x_change
     enemy_snake.segments[0].rect.y += enemy_y_change
