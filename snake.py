@@ -33,6 +33,7 @@ segment_height = min(game_screen_height, game_screen_width) / 40 - segment_margi
 total_segments_w = int(game_screen_width / (segment_width + segment_margin))
 total_segments_h = int(game_screen_width / (segment_width + segment_margin))
 
+
 # Set initial directions
 player_x_change, enemy_x_change = segment_width + segment_margin, segment_width + segment_margin
 player_y_change, enemy_y_change = 0, 0
@@ -216,24 +217,44 @@ def check_snake_head_onscreen(head_x, head_y):
     return 0 <= head_x <= game_screen_width - segment_width and 0 <= head_y <= game_screen_height - segment_height
 
 
+def set_enemy_left():
+    global enemy_x_change, enemy_y_change, enemy_move
+    enemy_x_change = (segment_width + segment_margin) * -1
+    enemy_y_change = 0
+    enemy_move = "left"
+
+
+def set_enemy_right():
+    global enemy_x_change, enemy_y_change, enemy_move
+    enemy_x_change = (segment_width + segment_margin)
+    enemy_y_change = 0
+    enemy_move = "right"
+
+
+def set_enemy_up():
+    global enemy_x_change, enemy_y_change, enemy_move
+    enemy_x_change = 0
+    enemy_y_change = (segment_height + segment_margin) * -1
+    enemy_move = "up"
+
+
+def set_enemy_down():
+    global enemy_x_change, enemy_y_change, enemy_move
+    enemy_x_change = 0
+    enemy_y_change = (segment_height + segment_margin)
+    enemy_move = "down"
+
+
 def move_enemy_snake(direction):
     global enemy_x_change, enemy_y_change, enemy_move
     if direction == "left":
-        enemy_x_change = (segment_width + segment_margin) * -1
-        enemy_y_change = 0
-        enemy_move = "left"
+        set_enemy_left()
     elif direction == "right":
-        enemy_x_change = (segment_width + segment_margin)
-        enemy_y_change = 0
-        enemy_move = "right"
+        set_enemy_right()
     elif direction == "up":
-        enemy_x_change = 0
-        enemy_y_change = (segment_height + segment_margin) * -1
-        enemy_move = "up"
+        set_enemy_up()
     elif direction == "down":
-        enemy_x_change = 0
-        enemy_y_change = (segment_height + segment_margin)
-        enemy_move = "down"
+        set_enemy_down()
 
     # To account for the new movement not being legal, try it again
     if safe_next_move():
@@ -254,20 +275,55 @@ def ai_movement():
         move_enemy_snake(enemy_move)
 
 
+def enemy_distance_weighting(direction):
+    # Calculates weighting for a given direction based on obstacle and food distance
+    weighted_score = 0
+    weighted_multiplier = 1
+    if direction == "left":
+        set_enemy_left()
+    elif direction == "right":
+        set_enemy_right()
+    elif direction == "up":
+        set_enemy_up()
+    elif direction == "down":
+        set_enemy_down()
+    current_pos_x = enemy_snake.segments[0].rect.x
+    current_pos_y = enemy_snake.segments[0].rect.y
+    while True:
+        enemy_snake.segments[0].rect.x += enemy_x_change
+        enemy_snake.segments[0].rect.y += enemy_y_change
+        if not check_snake_head_onscreen(enemy_snake.segments[0].rect.x, enemy_snake.segments[0].rect.y):
+            break
+        obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
+        if obstacle_hit_list:
+            break
+        enemy_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], food_onscreen.food_items, False)
+        if enemy_hit_list:
+            weighted_multiplier += 2
+        weighted_score += 1
+        player_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], my_snake.snake_pieces, False)
+        if player_hit_list:
+            weighted_multiplier += 1.5
+    enemy_snake.segments[0].rect.x = current_pos_x
+    enemy_snake.segments[0].rect.y = current_pos_y
+    return weighted_score * weighted_multiplier
+
+
 def change_enemy_direction():
     global enemy_move
     # Currently the snake cannot trap himself as he can walk through his own body if required
     if enemy_move == "left" or enemy_move == "right":
-        # try up and down fairly
-        x = random.randint(0, 1)
-        if x == 0:
+        opt1 = enemy_distance_weighting("up")
+        opt2 = enemy_distance_weighting("down")
+        if opt1 >= opt2:
             move_enemy_snake("up")
         else:
             move_enemy_snake("down")
+
     elif enemy_move == "up" or enemy_move == "down":
-        # try up and down fairly
-        x = random.randint(0, 1)
-        if x == 0:
+        opt1 = enemy_distance_weighting("left")
+        opt2 = enemy_distance_weighting("right")
+        if opt1 >= opt2:
             move_enemy_snake("left")
         else:
             move_enemy_snake("right")
