@@ -276,6 +276,7 @@ def change_enemy_direction():
 def safe_next_move():
     # Checks if the enemies next move is safe or not
     # TODO completely rewrite this section to make it smarter
+    # TODO make it so the snake cannot double back on itself but also not trap itself....
     x = enemy_snake.segments[0].rect.x + enemy_x_change
     y = enemy_snake.segments[0].rect.y + enemy_y_change
     if not check_snake_head_onscreen(x, y):
