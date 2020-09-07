@@ -249,7 +249,7 @@ def ai_movement():
         change_enemy_direction()
     else:
         if random.randint(1, 50) == 50:
-            # Randomly grows over time
+            # Randomly grows over time TODO move elsewhere as it's not part of movement
             enemy_snake.grow()
         move_enemy_snake(enemy_move)
 
