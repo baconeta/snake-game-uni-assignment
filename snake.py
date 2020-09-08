@@ -273,7 +273,7 @@ def move_enemy_snake():
 
 def ai_movement():
     global enemy_move
-    if not safe_next_move() or random.randint(0, 10) == 0:  # Randomly move sometimes too
+    if not safe_next_move() or random.randint(0, 7) == 0:  # Randomly move sometimes too
         change_enemy_direction()
     else:
         move_enemy_snake()
@@ -312,19 +312,25 @@ def search_path():
             break
         food_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], food_onscreen.food_items, False)
         if food_hit_list:
-            weighted_multiplier += 3  # To give priority for the snake to move towards the food
+            weighted_multiplier += 5  # To give priority for the snake to move towards the food
+        self_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], enemy_snake.segments[1:], False)
+        for x in range(len(self_hit_list)):
+            weighted_score -= 5  # To try and stop the snake doubling back on itself unless absolutely necessary
         weighted_score += 1
         player_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], my_snake.snake_pieces, False)
         if player_hit_list:
-            weighted_multiplier += 2  # To give priority for the snake to move towards the player
+            weighted_multiplier += 3  # To give priority for the snake to move towards the player
     return weighted_multiplier * weighted_score
 
 
 def change_enemy_direction():
-    global enemy_move
     # Currently the snake cannot trap himself as he can walk through his own body if required
     options = {"up": enemy_distance_weighting("up"), "down": enemy_distance_weighting("down"),
                "left": enemy_distance_weighting("left"), "right": enemy_distance_weighting("right")}
+    set_best_direction(options)
+
+
+def set_best_direction(options):
     best_direction = max(options, key=lambda key: options[key])
     if best_direction == "up":
         set_enemy_up()
@@ -334,24 +340,24 @@ def change_enemy_direction():
         set_enemy_left()
     if best_direction == "right":
         set_enemy_right()
-    move_enemy_snake()
+    if safe_next_move():
+        move_enemy_snake()
+    else:
+        options.pop(best_direction)  # Remove the best option and leave the second best option
+        set_best_direction(options)  # Recursively process the second best option
 
 
 def safe_next_move():
     # Checks if the enemies next move is safe or not
-    # TODO completely rewrite this section to make it smarter
-    # TODO make it so the snake cannot double back on itself but also not trap itself....or add as feature
-    # TODO PROBLEM WITH SNAKE GETTING STUCK
     if not enemy_snake.check_head_onscreen(enemy_x_change, enemy_y_change):
         return False
     enemy_snake.segments[0].rect.x += enemy_x_change
     enemy_snake.segments[0].rect.y += enemy_y_change
     obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
     player_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], my_snake.snake_pieces, False)
-    # body_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], enemy_snake.segments[1:], False)
     enemy_snake.segments[0].rect.x -= enemy_x_change
     enemy_snake.segments[0].rect.y -= enemy_y_change
-    if obstacle_hit_list or player_hit_list:  # or body_hit_list
+    if obstacle_hit_list or player_hit_list:
         return False
     return True
 
