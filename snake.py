@@ -56,6 +56,8 @@ class Snake:
         self.segments = []
         self.snake_pieces = pygame.sprite.Group()
         self.player = is_player
+        self.x_change = segment_width + segment_margin
+        self.y_change = 0
         self.create_snake()
 
     def create_snake(self):
@@ -98,6 +100,13 @@ class Snake:
         x = self.segments[0].rect.x + x_change
         y = self.segments[0].rect.y + y_change
         return 0 <= x <= game_screen_width - segment_width and 0 <= y <= game_screen_height - segment_height
+
+    def ai_movement(self):
+        #  Chooses whether to continue on it's path or change direction
+        if not safe_next_move() or random.randint(0, 7) == 0:  # Randomly move sometimes too
+            change_enemy_direction()
+        else:
+            move_enemy_snake()
 
 
 class Segment(pygame.sprite.Sprite):
@@ -268,14 +277,6 @@ def move_enemy_snake():
         change_enemy_direction()
 
 
-def ai_movement():
-    global enemy_move
-    if not safe_next_move() or random.randint(0, 7) == 0:  # Randomly move sometimes too
-        change_enemy_direction()
-    else:
-        move_enemy_snake()
-
-
 def enemy_distance_weighting(direction):
     # Calculates weighting for a given direction based on obstacle and food distance
     if direction == "left":
@@ -328,6 +329,7 @@ def change_enemy_direction():
 
 
 def set_best_direction(options):
+    # Set the best direction for the enemy ai snake
     best_direction = max(options, key=lambda key: options[key])
     if best_direction == "up":
         set_enemy_up()
@@ -451,7 +453,7 @@ while not game_quit:
     process_input()
     if not game_lost:
         my_snake.move(player_x_change, player_y_change)
-        ai_movement()
+        enemy_snake.ai_movement()
         check_player_collisions()
     game_play_drawing()
     clock.tick(10)
