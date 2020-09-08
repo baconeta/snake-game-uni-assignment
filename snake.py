@@ -314,23 +314,18 @@ def search_path():
 def change_enemy_direction():
     global enemy_move
     # Currently the snake cannot trap himself as he can walk through his own body if required
-    if enemy_move == "left" or enemy_move == "right":
-        opt1 = enemy_distance_weighting("up")
-        opt2 = enemy_distance_weighting("down")
-        if opt1 >= opt2:
-            set_enemy_up()
-        else:
-            set_enemy_down()
-        move_enemy_snake()
-
-    elif enemy_move == "up" or enemy_move == "down":
-        opt1 = enemy_distance_weighting("left")
-        opt2 = enemy_distance_weighting("right")
-        if opt1 >= opt2:
-            set_enemy_left()
-        else:
-            set_enemy_right()
-        move_enemy_snake()
+    options = {"up": enemy_distance_weighting("up"), "down": enemy_distance_weighting("down"),
+               "left": enemy_distance_weighting("left"), "right": enemy_distance_weighting("right")}
+    best_direction = max(options, key=lambda key: options[key])
+    if best_direction == "up":
+        set_enemy_up()
+    if best_direction == "down":
+        set_enemy_down()
+    if best_direction == "left":
+        set_enemy_left()
+    if best_direction == "right":
+        set_enemy_right()
+    move_enemy_snake()
 
 
 def safe_next_move():
