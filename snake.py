@@ -34,15 +34,15 @@ total_segments_w = int(game_screen_width / (segment_width + segment_margin))
 total_segments_h = int(game_screen_width / (segment_width + segment_margin))
 
 # Create obstacle designs
+# TODO add some way to make sure obstacles are placed not too closely OPTIONAL
+# TODO make sure original snake position can't be drawn on with obstacles IMPORTANT (never happened yet)
 possible_obstacles = [
     [[-1, 0], [0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]],
     [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [4, 2], [4, 1], [4, 0]],
     [[0, 0], [0, 1], [0, 2], [0, 3], [1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3]],
-    [[0, 0], [1, 1], [2, 2], [3, 3]]
+    [[0, 0], [1, 1], [2, 2], [3, 3]],
+    [[3, 0], [2, 1], [1, 2], [0, 3]]
 ]
-# TODO add some way to make sure obstacles are placed not too closely OPTIONAL
-# TODO make sure original snake position can't be drawn on with obstacles IMPORTANT (never happened yet)
-# TODO add obstacle rotations? OPTIONAL
 
 
 class Snake:
@@ -57,7 +57,7 @@ class Snake:
         #  Set the initial direction and block movement
         self.x_change = segment_width + segment_margin
         self.y_change = 0
-        
+
     def create_snake(self):
         for i in range(0, self.snake_length):
             if self.player:
@@ -263,8 +263,8 @@ def move_enemy_snake():
 
 def change_enemy_direction():
     # Currently the snake cannot trap himself as he can walk through his own body if required
-    options = {"up": setup_direction_weighting("up"), "down": setup_direction_weighting("down"),
-               "left": setup_direction_weighting("left"), "right": setup_direction_weighting("right")}
+    options = {"up": direction_weighting("up"), "down": direction_weighting("down"),
+               "left": direction_weighting("left"), "right": direction_weighting("right")}
     set_best_direction(options)
 
 
@@ -286,7 +286,7 @@ def set_best_direction(options):
         set_best_direction(options)  # Recursively process the second best option
 
 
-def setup_direction_weighting(direction):
+def direction_weighting(direction):
     # Processes and returns the directional weighting given a direction
     if direction == "left":
         set_enemy_left()
@@ -411,9 +411,9 @@ screen = pygame.display.set_mode([game_screen_width, game_screen_height + hud_he
 pygame.display.set_caption('Snake Game')
 
 # Image loading
-strawberry_sprite = pygame.image.load('strawberry.png').convert().convert_alpha()
-banana_sprite = pygame.image.load('banana.png').convert().convert_alpha()
-grape_sprite = pygame.image.load('grapes.png').convert().convert_alpha()
+strawberry_sprite = pygame.image.load('strawberry.png').convert_alpha()
+banana_sprite = pygame.image.load('banana.png').convert_alpha()
+grape_sprite = pygame.image.load('grapes.png').convert_alpha()
 strawberry_sprite = pygame.transform.scale(strawberry_sprite, (12, 12))
 banana_sprite = pygame.transform.scale(banana_sprite, (12, 12))
 grape_sprite = pygame.transform.scale(grape_sprite, (12, 12))
@@ -433,7 +433,7 @@ enemy_move = "right"
 
 # Build list of initial food spots and obstacles
 obstacles = pygame.sprite.Group()
-number_of_obstacles = random.randint(4, 7)
+number_of_obstacles = random.randint(5, 10)
 for obs in range(number_of_obstacles):
     Obstacle()
 food_onscreen = Food()
