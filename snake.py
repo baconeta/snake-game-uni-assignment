@@ -101,10 +101,12 @@ class Snake:
 
     def ai_movement(self):
         #  Chooses whether to continue on it's path or change direction
-        if not safe_next_move() or random.randint(0, 7) == 0:  # Randomly move sometimes too
+        if random.randint(0, 7) == 0:  # Randomly move sometimes too
+            change_enemy_direction()
+        elif not safe_next_move():
             change_enemy_direction()
         else:
-            move_enemy_snake()
+            self.move(self.x_change, self.y_change)
 
 
 class Segment(pygame.sprite.Sprite):
@@ -253,14 +255,6 @@ def safe_next_move():
     return True
 
 
-def move_enemy_snake():
-    # To account for the new movement not being legal, try it again
-    if safe_next_move():
-        enemy_snake.move(enemy_snake.x_change, enemy_snake.y_change)
-    else:
-        change_enemy_direction()
-
-
 def change_enemy_direction():
     # Currently the snake cannot trap himself as he can walk through his own body if required
     options = {"up": direction_weighting("up"), "down": direction_weighting("down"),
@@ -280,7 +274,7 @@ def set_best_direction(options):
     if best_direction == "right":
         set_enemy_right()
     if safe_next_move():
-        move_enemy_snake()
+        enemy_snake.move(enemy_snake.x_change, enemy_snake.y_change)
     else:
         options.pop(best_direction)  # Remove the best option and leave the second best option
         set_best_direction(options)  # Recursively process the second best option
