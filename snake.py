@@ -33,10 +33,6 @@ segment_height = min(game_screen_height, game_screen_width) / 40 - segment_margi
 total_segments_w = int(game_screen_width / (segment_width + segment_margin))
 total_segments_h = int(game_screen_width / (segment_width + segment_margin))
 
-# Set initial directions TODO maybe I could build this into the snake objects??
-player_x_change = segment_width + segment_margin
-player_y_change = 0
-
 # Create obstacle designs
 possible_obstacles = [
     [[-1, 0], [0, 0], [1, 0], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]],
@@ -56,10 +52,12 @@ class Snake:
         self.segments = []
         self.snake_pieces = pygame.sprite.Group()
         self.player = is_player
-        self.x_change = segment_width + segment_margin
-        self.y_change = 0
         self.create_snake()
 
+        #  Set the initial direction and block movement
+        self.x_change = segment_width + segment_margin
+        self.y_change = 0
+        
     def create_snake(self):
         for i in range(0, self.snake_length):
             if self.player:
@@ -360,23 +358,23 @@ def set_enemy_down():
 
 
 def process_input():
-    global game_quit, player_x_change, player_y_change
+    global game_quit
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_quit = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                player_x_change = (segment_width + segment_margin) * -1
-                player_y_change = 0
+                my_snake.x_change = (segment_width + segment_margin) * -1
+                my_snake.y_change = 0
             if event.key == pygame.K_RIGHT:
-                player_x_change = (segment_width + segment_margin)
-                player_y_change = 0
+                my_snake.x_change = (segment_width + segment_margin)
+                my_snake.y_change = 0
             if event.key == pygame.K_UP:
-                player_x_change = 0
-                player_y_change = (segment_height + segment_margin) * -1
+                my_snake.x_change = 0
+                my_snake.y_change = (segment_height + segment_margin) * -1
             if event.key == pygame.K_DOWN:
-                player_x_change = 0
-                player_y_change = (segment_height + segment_margin)
+                my_snake.x_change = 0
+                my_snake.y_change = (segment_height + segment_margin)
 
 
 def game_play_drawing():
@@ -450,7 +448,7 @@ while not game_quit:
     # Game loop
     process_input()
     if not game_lost:
-        my_snake.move(player_x_change, player_y_change)
+        my_snake.move(my_snake.x_change, my_snake.y_change)
         enemy_snake.ai_movement()
         check_player_collisions()
     game_play_drawing()
