@@ -131,32 +131,41 @@ class Food:
         y = random.randint(0, total_segments_w - 1)
         x *= (segment_width + segment_margin)
         y *= (segment_height + segment_margin)
-        # To add a check that ensures it doesn't spawn on the snakes
-        fruit, score = self.select_food()
-        new_food = FoodItem(x, y, fruit, score)
-        if not check_food_spawn(new_food):
-            self.food_items.add(new_food)
-        else:
-            self.create_food()
+        self.select_food(x, y)
 
-    def select_food(self):
-        x = random.randint(1, 10)
-        if x <= 6:
+    def select_food(self, x, y):
+        choice = random.randint(1, 10)
+        if choice <= 6:
             fruit = strawberry_sprite
             score = 10
-        elif x <= 9:
+        elif choice <= 9:
             fruit = banana_sprite
             score = 25
         else:
             fruit = grape_sprite
             score = 70
-        return fruit, score
+        new_food = FoodItem(x, y, fruit, score)
+        if not self.check_food_spawn(new_food):
+            self.food_items.add(new_food)
+        else:
+            self.create_food()
 
     def replenish(self, player_obtained):
         # Adds a random chance for the food to disappear and not replenish (increase difficulty overtime)
-        if random.randint(1, 3) == 1 and len(self.food_items) > 1 and not player_obtained:
+        if random.randint(1, 3) == 1 and len(self.food_items) > 2 and not player_obtained:
             return
         self.create_food()
+
+    def check_food_spawn(self, food):
+        # Checks if the food spawns on a snake or obstacle
+        spawn_collision = False
+        food_snake_coll = pygame.sprite.spritecollide(food, my_snake.segments, False)
+        if food_snake_coll:
+            spawn_collision = True
+        food_obstacle_coll = pygame.sprite.spritecollide(food, obstacles, False)
+        if food_obstacle_coll:
+            spawn_collision = True
+        return spawn_collision
 
 
 class FoodItem(pygame.sprite.Sprite):
@@ -195,18 +204,6 @@ class ObstaclePiece(pygame.sprite.Sprite):
 
 
 # Static functions here
-def check_food_spawn(food):
-    # Checks if the food spawns on a snake or obstacle
-    spawn_collision = False
-    food_snake_coll = pygame.sprite.spritecollide(food, my_snake.segments, False)
-    if food_snake_coll:
-        spawn_collision = True
-    food_obstacle_coll = pygame.sprite.spritecollide(food, obstacles, False)
-    if food_obstacle_coll:
-        spawn_collision = True
-    return spawn_collision
-
-
 def check_player_collisions():
     global game_lost
     # Check if the snake gets food
