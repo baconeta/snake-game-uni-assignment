@@ -34,8 +34,8 @@ total_segments_w = int(game_screen_width / (segment_width + segment_margin))
 total_segments_h = int(game_screen_width / (segment_width + segment_margin))
 
 # Set initial directions TODO maybe I could build this into the snake objects??
-player_x_change, enemy_x_change = segment_width + segment_margin, segment_width + segment_margin
-player_y_change, enemy_y_change = 0, 0
+player_x_change = segment_width + segment_margin
+player_y_change = 0
 
 # Create obstacle designs
 possible_obstacles = [
@@ -242,24 +242,23 @@ def scoring(enemy_hit_list, food_hit_list):
 
 def safe_next_move():
     # Checks if the enemies next move is safe or not
-    if not enemy_snake.check_head_onscreen(enemy_x_change, enemy_y_change):
+    if not enemy_snake.check_head_onscreen(enemy_snake.x_change, enemy_snake.y_change):
         return False
-    enemy_snake.segments[0].rect.x += enemy_x_change
-    enemy_snake.segments[0].rect.y += enemy_y_change
+    enemy_snake.segments[0].rect.x += enemy_snake.x_change
+    enemy_snake.segments[0].rect.y += enemy_snake.y_change
     obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
     player_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], my_snake.snake_pieces, False)
-    enemy_snake.segments[0].rect.x -= enemy_x_change
-    enemy_snake.segments[0].rect.y -= enemy_y_change
+    enemy_snake.segments[0].rect.x -= enemy_snake.x_change
+    enemy_snake.segments[0].rect.y -= enemy_snake.y_change
     if obstacle_hit_list or player_hit_list:
         return False
     return True
 
 
 def move_enemy_snake():
-    global enemy_x_change, enemy_y_change
     # To account for the new movement not being legal, try it again
     if safe_next_move():
-        enemy_snake.move(enemy_x_change, enemy_y_change)
+        enemy_snake.move(enemy_snake.x_change, enemy_snake.y_change)
     else:
         change_enemy_direction()
 
@@ -312,9 +311,9 @@ def search_path():
     weighted_score = 0
     weighted_multiplier = 1
     while True:  # Until the snake would hit an obstacle/go off screen
-        enemy_snake.segments[0].rect.x += enemy_x_change
-        enemy_snake.segments[0].rect.y += enemy_y_change
-        if not enemy_snake.check_head_onscreen(enemy_x_change, enemy_y_change):
+        enemy_snake.segments[0].rect.x += enemy_snake.x_change
+        enemy_snake.segments[0].rect.y += enemy_snake.y_change
+        if not enemy_snake.check_head_onscreen(enemy_snake.x_change, enemy_snake.y_change):
             break
         obstacle_hit_list = pygame.sprite.spritecollide(enemy_snake.segments[0], obstacles, False)
         if obstacle_hit_list:
@@ -333,30 +332,30 @@ def search_path():
 
 
 def set_enemy_left():
-    global enemy_x_change, enemy_y_change, enemy_move
-    enemy_x_change = (segment_width + segment_margin) * -1
-    enemy_y_change = 0
+    global enemy_move
+    enemy_snake.x_change = (segment_width + segment_margin) * -1
+    enemy_snake.y_change = 0
     enemy_move = "left"
 
 
 def set_enemy_right():
-    global enemy_x_change, enemy_y_change, enemy_move
-    enemy_x_change = (segment_width + segment_margin)
-    enemy_y_change = 0
+    global enemy_move
+    enemy_snake.x_change = (segment_width + segment_margin)
+    enemy_snake.y_change = 0
     enemy_move = "right"
 
 
 def set_enemy_up():
-    global enemy_x_change, enemy_y_change, enemy_move
-    enemy_x_change = 0
-    enemy_y_change = (segment_height + segment_margin) * -1
+    global enemy_move
+    enemy_snake.x_change = 0
+    enemy_snake.y_change = (segment_height + segment_margin) * -1
     enemy_move = "up"
 
 
 def set_enemy_down():
-    global enemy_x_change, enemy_y_change, enemy_move
-    enemy_x_change = 0
-    enemy_y_change = (segment_height + segment_margin)
+    global enemy_move
+    enemy_snake.x_change = 0
+    enemy_snake.y_change = (segment_height + segment_margin)
     enemy_move = "down"
 
 
