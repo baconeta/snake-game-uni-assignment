@@ -33,7 +33,6 @@ segment_height = min(game_screen_height, game_screen_width) / 40 - segment_margi
 total_segments_w = int(game_screen_width / (segment_width + segment_margin))
 total_segments_h = int(game_screen_width / (segment_width + segment_margin))
 
-
 # Set initial directions TODO maybe I could build this into the snake objects??
 player_x_change, enemy_x_change = segment_width + segment_margin, segment_width + segment_margin
 player_y_change, enemy_y_change = 0, 0
@@ -133,11 +132,25 @@ class Food:
         x *= (segment_width + segment_margin)
         y *= (segment_height + segment_margin)
         # To add a check that ensures it doesn't spawn on the snakes
-        new_food = FoodItem(x, y)
+        fruit, score = self.select_food()
+        new_food = FoodItem(x, y, fruit, score)
         if not check_food_spawn(new_food):
             self.food_items.add(new_food)
         else:
             self.create_food()
+
+    def select_food(self):
+        x = random.randint(1, 10)
+        if x <= 6:
+            fruit = strawberry_sprite
+            score = 10
+        elif x <= 9:
+            fruit = banana_sprite
+            score = 25
+        else:
+            fruit = grape_sprite
+            score = 70
+        return fruit, score
 
     def replenish(self, player_obtained):
         # Adds a random chance for the food to disappear and not replenish (increase difficulty overtime)
@@ -147,18 +160,14 @@ class Food:
 
 
 class FoodItem(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, fruit, value):
         super().__init__()
-        # Set height, width
-        self.image = pygame.Surface([segment_width, segment_height])
-        self.image.fill(RED)
-
+        self.image = fruit
         # Set top-left corner of the bounding rectangle to be the passed-in location.
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
-        self.score_value = 10
+        self.score_value = value
 
 
 class Obstacle:
@@ -337,6 +346,7 @@ def safe_next_move():
     # Checks if the enemies next move is safe or not
     # TODO completely rewrite this section to make it smarter
     # TODO make it so the snake cannot double back on itself but also not trap itself....or add as feature
+    # TODO PROBLEM WITH SNAKE GETTING STUCK
     if not enemy_snake.check_head_onscreen(enemy_x_change, enemy_y_change):
         return False
     enemy_snake.segments[0].rect.x += enemy_x_change
@@ -403,6 +413,14 @@ screen = pygame.display.set_mode([game_screen_width, game_screen_height + hud_he
 
 # Set the title of the window
 pygame.display.set_caption('Snake Game')
+
+# Image loading
+strawberry_sprite = pygame.image.load('strawberry.png').convert().convert_alpha()
+banana_sprite = pygame.image.load('banana.png').convert().convert_alpha()
+grape_sprite = pygame.image.load('grapes.png').convert().convert_alpha()
+strawberry_sprite = pygame.transform.scale(strawberry_sprite, (12, 12))
+banana_sprite = pygame.transform.scale(banana_sprite, (12, 12))
+grape_sprite = pygame.transform.scale(grape_sprite, (12, 12))
 
 # Fonts
 game_over_font = pygame.font.Font(None, 72)
