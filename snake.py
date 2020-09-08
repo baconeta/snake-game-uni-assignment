@@ -191,8 +191,8 @@ class Obstacle:
         # Randomly choose which obstacle is drawn
         random_obstacle = random.randint(0, len(possible_obstacles)-1)
         #  Choose a block number to have the origin spot from (the numbers are based on obstacle shapes for now)
-        origin_block_x = random.randint(1, total_segments_w - 4)
-        origin_block_y = random.randint(4, total_segments_h - 4)
+        origin_block_x = random.randint(2, total_segments_w - 4)
+        origin_block_y = random.randint(3, total_segments_h - 4)
         for x in possible_obstacles[random_obstacle]:
             rel_x = (origin_block_x + x[0]) * (segment_width + segment_margin)
             rel_y = (origin_block_y + x[1]) * (segment_height + segment_margin)
