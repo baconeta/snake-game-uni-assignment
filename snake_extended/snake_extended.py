@@ -63,7 +63,7 @@ class Snake:
     def create_snake(self):
         for i in range(0, self.snake_length):
             if self.player:
-                x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
+                x = (segment_width + segment_margin) * 15 - (segment_width + segment_margin) * i
                 y = (segment_height + segment_margin) * 2
             else:
                 x = (segment_width + segment_margin) * 4 - (segment_width + segment_margin) * i
@@ -249,7 +249,7 @@ class Game:
             self.food_onscreen.replenish(False, self)
 
     def process_input(self):
-        global game_quit
+        global game_quit, name_entered, player_name
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_quit = True
@@ -266,6 +266,26 @@ class Game:
                 if event.key == pygame.K_DOWN:
                     self.my_snake.x_change = 0
                     self.my_snake.y_change = (segment_height + segment_margin)
+                if not name_entered:
+                    if event.unicode.isalpha():
+                        player_name += event.unicode
+                    elif event.key == pygame.K_BACKSPACE:
+                        player_name = player_name[:-1]
+                    elif event.key == pygame.K_RETURN:
+                        name_entered = True
+
+    def name_drawing(self):
+        self.process_input()
+        enter_name_text = name_font.render("Enter your name: " + player_name, True, WHITE, BLACK)
+        next_line_text = name_font.render("And press enter to play.", True, WHITE, BLACK)
+        name_rect = enter_name_text.get_rect()
+        next_line_rect = next_line_text.get_rect()
+        text_x = screen.get_width() / 2 - name_rect.width / 2
+        text_y = screen.get_height() / 2 - name_rect.height / 2
+        next_x = screen.get_width() / 2 - next_line_rect.width / 2
+        screen.blit(enter_name_text, [text_x, text_y])
+        screen.blit(next_line_text, [next_x, text_y + 30])
+        pygame.display.flip()
 
 
 # Static functions here
@@ -423,6 +443,7 @@ grape_sprite = pygame.transform.scale(grape_sprite, (12, 12))
 # Fonts
 game_over_font = pygame.font.Font(None, 72)
 score_font = pygame.font.SysFont("Courier", 48)
+name_font = pygame.font.SysFont("Courier", 24)
 
 # Build list of initial food spots and obstacles
 game = Game()
@@ -430,9 +451,13 @@ game = Game()
 # Game variables and setup
 clock = pygame.time.Clock()
 game_quit = False
+player_name = ""
+name_entered = False
 
 while not game_quit:
     # Game loop
+    while not name_entered:
+        game.name_drawing()
     game.process_input()
     if not game.game_lost:
         game.my_snake.move(game.my_snake.x_change, game.my_snake.y_change)
