@@ -18,6 +18,7 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
 
 # Screen size
 game_screen_height = 600
@@ -41,6 +42,19 @@ possible_obstacles = [
     [[0, 0], [1, 1], [2, 2], [3, 3]],
     [[3, 0], [2, 1], [1, 2], [0, 3]]
 ]
+
+# Scoring and saving code
+scores_to_keep = 5
+try:
+    high_scores_file = open("high_scores.txt", "r+")
+except FileNotFoundError:
+    # create the file if it doesn't yet exist
+    high_scores_file = open("high_scores.txt", "w+")
+high_scores_list = high_scores_file.readlines()
+high_scores_list = [x.strip('\n') for x in high_scores_list]
+high_scores_list = high_scores_list[:scores_to_keep]
+for pos, x in enumerate(high_scores_list):
+    high_scores_list[pos] = x.split(' ')
 
 # Set snake sizes
 player_init_size = 3
@@ -111,16 +125,13 @@ class Snake:
 
 
 class Segment(pygame.sprite.Sprite):
-    """ Class to represent one segment of a snake. """
-    # Constructor
+    # Class to represent one segment of a snake
     def __init__(self, x, y, player):
-        # Call the parent's constructor
-        super().__init__()
+        super().__init__()  # Call the parent's constructor
         if player:
             segment_colour = WHITE
         else:
             segment_colour = BLUE
-        # Set height, width
         self.image = pygame.Surface([segment_width, segment_height])
         self.image.fill(segment_colour)
         # Set top-left corner of the bounding rectangle to be the passed-in location.
@@ -130,6 +141,8 @@ class Segment(pygame.sprite.Sprite):
 
 
 class Food:
+    # Represents all instances of the food elements in play
+    # and controls creations of new food items
     def __init__(self, game_obj):
         self.food_items = pygame.sprite.Group()
         number_foods = 5
@@ -179,6 +192,7 @@ class FoodItem(pygame.sprite.Sprite):
 
 
 class Obstacle:
+    # Represents all Obstacle objects for this game session
     def __init__(self, obstacles):
         # Randomly choose which obstacle is drawn
         random_obstacle = random.randint(0, len(possible_obstacles)-1)
@@ -193,6 +207,7 @@ class Obstacle:
 
 
 class ObstaclePiece(pygame.sprite.Sprite):
+    # Represents one block of an obstacle
     def __init__(self, x, y):
         super().__init__()
         self.image = pygame.Surface([segment_width, segment_height])
@@ -206,7 +221,7 @@ class Game:
     def __init__(self):
         self.enemy_snake = Snake(enemy_init_size, False)
         self.my_snake = Snake(player_init_size, True)
-        self.enemy_move = "right"
+        self.enemy_move = "right"  # So that the early snake start is consistent
         self.obstacles = pygame.sprite.Group()
         number_of_obstacles = random.randint(5, 10)
         for obs in range(number_of_obstacles):
@@ -218,6 +233,7 @@ class Game:
         self.reset_game = False
 
     def game_play_drawing(self):
+        # Function to draw all gameplay elements
         if game_quit:
             return
         screen.fill(BLACK)
@@ -227,19 +243,45 @@ class Game:
         self.obstacles.draw(screen)
         self.draw_score()
         if self.game_lost:
-            game_over_text = game_over_font.render("Game Over", True, WHITE, BLACK)
-            text_rect = game_over_text.get_rect()
-            text_x = screen.get_width() / 2 - text_rect.width / 2
-            text_y = screen.get_height() / 5 - text_rect.height / 2
-            screen.blit(game_over_text, [text_x, text_y])
-            play_again_text = name_font.render("Press enter to play again!", True, WHITE, BLACK)
-            play_rect = play_again_text.get_rect()
-            text_x = screen.get_width() / 2 - play_rect.width / 2
-            screen.blit(play_again_text, [text_x, text_y+50])
-            # Draw high-scores over top of the high score screen
+            self.game_over_screen()
         pygame.display.flip()
 
+    def game_over_screen(self):
+        # Draws game over/play again screen
+        game_over_text = game_over_font.render("Game Over", True, WHITE, BLACK)
+        text_rect = game_over_text.get_rect()
+        text_x = screen.get_width() / 2 - text_rect.width / 2
+        text_y = screen.get_height() / 5 - text_rect.height / 2
+        screen.blit(game_over_text, [text_x, text_y])
+        play_again_text = name_font.render("Press enter to play again!", True, WHITE, BLACK)
+        play_rect = play_again_text.get_rect()
+        text_x = screen.get_width() / 2 - play_rect.width / 2
+        screen.blit(play_again_text, [text_x, text_y + 50])
+        self.draw_high_scores(text_y)
+
+    def draw_high_scores(self, text_y):
+        # Draw high scores onto the end screen
+        new_score, list_pos = process_high_scores(self.current_score)
+        high_score_text = name_font.render("High-scores:", True, BLUE, BLACK)
+        high_score_rect = high_score_text.get_rect()
+        text_x = screen.get_width() / 2 - high_score_rect.width / 2
+        screen.blit(high_score_text, [text_x, text_y + 100])
+        text_y += 100
+        for y, x in enumerate(high_scores_list):
+            high_score_colour = WHITE
+            if new_score and list_pos == y:
+                high_score_colour = YELLOW
+            text_y += 40
+            try:
+                score_text = name_font.render(x[0] + ": " + x[1], True, high_score_colour, BLACK)
+                score_text_rect = score_text.get_rect()
+                text_x = screen.get_width() / 2 - score_text_rect.width / 2
+                screen.blit(score_text, [text_x, text_y])
+            except IndexError:
+                raise Exception("File content format invalid or parsed incorrectly.")
+
     def draw_score(self):
+        # Draws the scoring module onto the screen
         self.score_text = score_font.render("Score: " + str(self.current_score), True, WHITE)
         score_text_rect = self.score_text.get_rect()
         score_text_rect.center = (150, 630)
@@ -247,6 +289,7 @@ class Game:
         screen.blit(self.score_text, score_text_rect)
 
     def scoring(self, enemy_hit_list, food_hit_list):
+        # Controls the scoring variable
         for x in food_hit_list:
             self.current_score += x.score_value
             self.my_snake.grow()
@@ -257,6 +300,7 @@ class Game:
             self.food_onscreen.replenish(False, self)
 
     def name_drawing(self):
+        # Draws the initial name entry screen
         global name_entered
         process_input()
         if game_quit:
@@ -277,7 +321,8 @@ class Game:
 
 # Static functions here
 def play_again():
-    global game
+    global game, high_scores_list
+    high_scores_list = high_scores_list[:scores_to_keep]
     while not game.reset_game:
         process_input()
         if game_quit:
@@ -328,7 +373,7 @@ def safe_next_move():
 
 
 def change_enemy_direction():
-    # Currently the snake cannot trap himself as he can walk through his own body if required
+    # Controls the changing of enemy snake direction based on path searching
     options = {"up": direction_weighting("up"), "down": direction_weighting("down"),
                "left": direction_weighting("left"), "right": direction_weighting("right")}
     set_best_direction(options)
@@ -444,10 +489,30 @@ def process_input():
                     player_name += event.unicode
                 elif event.key == pygame.K_BACKSPACE:
                     player_name = player_name[:-1]
-                elif event.key == pygame.K_SPACE:
-                    player_name += " "
                 elif event.key == pygame.K_RETURN:
                     name_entered = True
+
+
+def process_high_scores(current_score):
+    # Returns whether a new score was achieved
+    # and the position of that score in the high-scores
+    global high_scores_list, player_name
+    new_high_score = False
+    score_pos = None
+    for y, x in enumerate(high_scores_list):
+        try:
+            if current_score > int(x[1]):
+                high_scores_list.insert(y, [player_name, str(current_score)])
+                new_high_score = True
+                score_pos = y
+                break
+        except IndexError:
+            raise Exception("File content format not valid or parsed incorrectly")
+    if scores_to_keep > len(high_scores_list) and not new_high_score:
+        high_scores_list.append([player_name, str(current_score)])
+        new_high_score = True
+        score_pos = len(high_scores_list)-1
+    return new_high_score, score_pos
 
 
 # Call this function so the Pygame library can initialize itself
@@ -483,9 +548,10 @@ name_entered = False
 
 while not game_quit:
     # Game loop
-    process_input()
     while not name_entered:
         game.name_drawing()
+
+    process_input()
 
     if not game.game_lost:
         game.my_snake.move(game.my_snake.x_change, game.my_snake.y_change)
@@ -497,4 +563,10 @@ while not game_quit:
     game.game_play_drawing()
     clock.tick(12)
 
+# Write to and close the files when quitting
+high_scores_file.seek(0)
+high_scores_file.truncate()
+for x in high_scores_list:
+    high_scores_file.write(str(x[0]) + " " + str(x[1]) + "\n")
+high_scores_file.close()
 pygame.quit()
