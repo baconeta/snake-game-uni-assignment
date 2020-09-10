@@ -49,25 +49,23 @@ enemy_init_size = 7
 
 class Snake:
     """ Class to represent one snake. """
-    def __init__(self, starting_length, is_player):
+    def __init__(self, starting_length, is_player, starting_pos):
         self.snake_length = starting_length
         self.segments = []
         self.snake_pieces = pygame.sprite.Group()
         self.player = is_player
-        self.create_snake()
+        self.create_snake(starting_pos)
 
         #  Set the initial direction and block movement
         self.x_change = segment_width + segment_margin
         self.y_change = 0
 
-    def create_snake(self):
+    def create_snake(self, starting_pos):
+        # Function to build a snake at a given starting block position x,y
+        # where starting_pos[0] = x and starting_pos[1] = y
         for i in range(0, self.snake_length):
-            if self.player:
-                x = (segment_width + segment_margin) * 30 - (segment_width + segment_margin) * i
-                y = (segment_height + segment_margin) * 2
-            else:
-                x = (segment_width + segment_margin) * 4 - (segment_width + segment_margin) * i
-                y = (segment_height + segment_margin) * 30
+            x = (segment_width + segment_margin) * starting_pos[0] - (segment_width + segment_margin) * i
+            y = (segment_height + segment_margin) * starting_pos[1]
             segment = Segment(x, y, self.player)
             self.segments.append(segment)
             self.snake_pieces.add(segment)
@@ -204,8 +202,8 @@ class ObstaclePiece(pygame.sprite.Sprite):
 
 class Game:
     def __init__(self):
-        self.enemy_snake = Snake(enemy_init_size, False)
-        self.my_snake = Snake(player_init_size, True)
+        self.enemy_snake = Snake(enemy_init_size, False, (4, 30))
+        self.my_snake = Snake(player_init_size, True, (15, 2))
         self.enemy_move = "right"
         self.obstacles = pygame.sprite.Group()
         number_of_obstacles = random.randint(5, 10)
@@ -217,6 +215,7 @@ class Game:
         self.current_score = 0
 
     def game_play_drawing(self):
+        # Function to draw all gameplay elements and gameover screen
         screen.fill(BLACK)
         self.my_snake.snake_pieces.draw(screen)
         self.enemy_snake.snake_pieces.draw(screen)
@@ -232,6 +231,7 @@ class Game:
         pygame.display.flip()
 
     def draw_score(self):
+        # Draws the scoring module onto the screen
         self.score_text = score_font.render("Score: " + str(self.current_score), True, WHITE)
         score_text_rect = self.score_text.get_rect()
         score_text_rect.center = (150, 630)
@@ -239,6 +239,7 @@ class Game:
         screen.blit(self.score_text, score_text_rect)
 
     def scoring(self, enemy_hit_list, food_hit_list):
+        # Controls the scoring variable
         for x in food_hit_list:
             self.current_score += x.score_value
             self.my_snake.grow()
@@ -312,7 +313,7 @@ def safe_next_move():
 
 
 def change_enemy_direction():
-    # Currently the snake cannot trap himself as he can walk through his own body if required
+    # Controls the changing of enemy snake direction based on path searching
     options = {"up": direction_weighting("up"), "down": direction_weighting("down"),
                "left": direction_weighting("left"), "right": direction_weighting("right")}
     set_best_direction(options)
