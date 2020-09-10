@@ -215,6 +215,7 @@ class Game:
         self.score_text = None
         self.game_lost = False
         self.current_score = 0
+        self.reset_game = False
 
     def game_play_drawing(self):
         screen.fill(BLACK)
@@ -227,8 +228,13 @@ class Game:
             game_over_text = game_over_font.render("Game Over", True, WHITE, BLACK)
             text_rect = game_over_text.get_rect()
             text_x = screen.get_width() / 2 - text_rect.width / 2
-            text_y = screen.get_height() / 2 - text_rect.height / 2
+            text_y = screen.get_height() / 5 - text_rect.height / 2
             screen.blit(game_over_text, [text_x, text_y])
+            play_again_text = name_font.render("Press enter to play again!", True, WHITE, BLACK)
+            play_rect = play_again_text.get_rect()
+            text_x = screen.get_width() / 2 - play_rect.width / 2
+            screen.blit(play_again_text, [text_x, text_y+50])
+            # Draw high-scores over top of the high score screen
         pygame.display.flip()
 
     def draw_score(self):
@@ -248,34 +254,9 @@ class Game:
             self.enemy_snake.grow()
             self.food_onscreen.replenish(False, self)
 
-    def process_input(self):
-        global game_quit, name_entered, player_name
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_quit = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.my_snake.x_change = (segment_width + segment_margin) * -1
-                    self.my_snake.y_change = 0
-                if event.key == pygame.K_RIGHT:
-                    self.my_snake.x_change = (segment_width + segment_margin)
-                    self.my_snake.y_change = 0
-                if event.key == pygame.K_UP:
-                    self.my_snake.x_change = 0
-                    self.my_snake.y_change = (segment_height + segment_margin) * -1
-                if event.key == pygame.K_DOWN:
-                    self.my_snake.x_change = 0
-                    self.my_snake.y_change = (segment_height + segment_margin)
-                if not name_entered:
-                    if event.unicode.isalpha():
-                        player_name += event.unicode
-                    elif event.key == pygame.K_BACKSPACE:
-                        player_name = player_name[:-1]
-                    elif event.key == pygame.K_RETURN:
-                        name_entered = True
-
     def name_drawing(self):
-        self.process_input()
+        process_input()
+        screen.fill(BLACK)
         enter_name_text = name_font.render("Enter your name: " + player_name, True, WHITE, BLACK)
         next_line_text = name_font.render("And press enter to play.", True, WHITE, BLACK)
         name_rect = enter_name_text.get_rect()
@@ -289,6 +270,15 @@ class Game:
 
 
 # Static functions here
+def play_again():
+    global game
+    while not game.reset_game:
+        process_input()
+        if game_quit:
+            return
+    game = Game()
+
+
 def check_food_spawn(food, game_objects):
     # Returns True if the food would spawn on a snake or obstacle
     spawn_collision = False
@@ -423,6 +413,35 @@ def set_enemy_down():
     game.enemy_move = "down"
 
 
+def process_input():
+    global game_quit, name_entered, player_name
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            game_quit = True
+        if event.type == pygame.KEYDOWN:
+            if game.game_lost and event.key == pygame.K_RETURN:
+                game.reset_game = True
+            elif event.key == pygame.K_LEFT:
+                game.my_snake.x_change = (segment_width + segment_margin) * -1
+                game.my_snake.y_change = 0
+            elif event.key == pygame.K_RIGHT:
+                game.my_snake.x_change = (segment_width + segment_margin)
+                game.my_snake.y_change = 0
+            elif event.key == pygame.K_UP:
+                game.my_snake.x_change = 0
+                game.my_snake.y_change = (segment_height + segment_margin) * -1
+            elif event.key == pygame.K_DOWN:
+                game.my_snake.x_change = 0
+                game.my_snake.y_change = (segment_height + segment_margin)
+            elif not name_entered:
+                if event.unicode.isalpha():
+                    player_name += event.unicode
+                elif event.key == pygame.K_BACKSPACE:
+                    player_name = player_name[:-1]
+                elif event.key == pygame.K_RETURN:
+                    name_entered = True
+
+
 # Call this function so the Pygame library can initialize itself
 pygame.init()
 
@@ -458,12 +477,14 @@ while not game_quit:
     # Game loop
     while not name_entered:
         game.name_drawing()
-    game.process_input()
+    process_input()
     if not game.game_lost:
         game.my_snake.move(game.my_snake.x_change, game.my_snake.y_change)
         game.enemy_snake.ai_movement()
         check_player_collisions()
+    else:
+        play_again()
     game.game_play_drawing()
-    clock.tick(10)
+    clock.tick(20)
 
 pygame.quit()
