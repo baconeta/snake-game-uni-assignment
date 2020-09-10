@@ -52,7 +52,7 @@ except FileNotFoundError:
     high_scores_file = open("high_scores.txt", "w+")
 high_scores_list = high_scores_file.readlines()
 high_scores_list = [x.strip('\n') for x in high_scores_list]
-high_scores_list = high_scores_list[:scores_to_keep]
+high_scores_list = high_scores_list[:scores_to_keep]  # Only care about the 5 best scores
 for pos, x in enumerate(high_scores_list):
     high_scores_list[pos] = x.split(' ')
 
@@ -63,25 +63,23 @@ enemy_init_size = 7
 
 class Snake:
     """ Class to represent one snake. """
-    def __init__(self, starting_length, is_player):
+    def __init__(self, starting_length, is_player, starting_pos):
         self.snake_length = starting_length
         self.segments = []
         self.snake_pieces = pygame.sprite.Group()
         self.player = is_player
-        self.create_snake()
+        self.create_snake(starting_pos)
 
         #  Set the initial direction and block movement
         self.x_change = segment_width + segment_margin
         self.y_change = 0
 
-    def create_snake(self):
+    def create_snake(self, starting_pos):
+        # Function to build a snake at a given starting block position x,y
+        # where starting_pos[0] = x and starting_pos[1] = y
         for i in range(0, self.snake_length):
-            if self.player:
-                x = (segment_width + segment_margin) * 15 - (segment_width + segment_margin) * i
-                y = (segment_height + segment_margin) * 2
-            else:
-                x = (segment_width + segment_margin) * 4 - (segment_width + segment_margin) * i
-                y = (segment_height + segment_margin) * 30
+            x = (segment_width + segment_margin) * starting_pos[0] - (segment_width + segment_margin) * i
+            y = (segment_height + segment_margin) * starting_pos[1]
             segment = Segment(x, y, self.player)
             self.segments.append(segment)
             self.snake_pieces.add(segment)
@@ -92,17 +90,19 @@ class Snake:
         y = self.segments[0].rect.y + y_change
 
         if self.check_head_onscreen(x_change, y_change):
-            # Insert new segment into the list
+            # Insert a new segment into the list
             segment = Segment(x, y, self.player)
             self.segments.insert(0, segment)
             self.snake_pieces.add(segment)
             # Get rid of last segment of the snake
             old_segment = self.segments.pop()
             self.snake_pieces.remove(old_segment)
-        elif self.player:
+        elif self.player:  # If the player goes "off-screen"
             game.game_lost = True
 
     def grow(self):
+        # A natural growth function which simply increases the length of the
+        # snake by one without extending its end until the last piece passes that point
         x = self.segments[-1].rect.x
         y = self.segments[-1].rect.y
         segment = Segment(x, y, self.player)
@@ -110,6 +110,7 @@ class Snake:
         self.snake_pieces.add(segment)
 
     def check_head_onscreen(self, x_change, y_change):
+        # returns false if the snake head would go off screen
         x = self.segments[0].rect.x + x_change
         y = self.segments[0].rect.y + y_change
         return 0 <= x <= game_screen_width - segment_width and 0 <= y <= game_screen_height - segment_height
@@ -150,6 +151,7 @@ class Food:
             self.create_food(game_obj)
 
     def create_food(self, game_obj):
+        # Function to randomly generate food location and place it
         x = random.randint(0, total_segments_w - 1)
         y = random.randint(0, total_segments_w - 1)
         x *= (segment_width + segment_margin)
@@ -157,6 +159,7 @@ class Food:
         self.select_food(x, y, game_obj)
 
     def select_food(self, x, y, game_obj):
+        # Function to randomly select which food will spawn
         choice = random.randint(1, 10)
         if choice <= 6:
             fruit = strawberry_sprite
@@ -174,7 +177,8 @@ class Food:
             self.create_food(game_obj)
 
     def replenish(self, player_obtained, game_obj):
-        # Adds a random chance for the food to disappear and not replenish (increase difficulty overtime)
+        # Adds a random chance for the food to disappear and not replenish
+        # if the snake gets it to increase the difficulty overtime
         if random.randint(1, 3) == 1 and len(self.food_items) > 2 and not player_obtained:
             return
         self.create_food(game_obj)
@@ -218,9 +222,10 @@ class ObstaclePiece(pygame.sprite.Sprite):
 
 
 class Game:
+    # Game object which governs an instance of gameplay - resettable on play_again()
     def __init__(self):
-        self.enemy_snake = Snake(enemy_init_size, False)
-        self.my_snake = Snake(player_init_size, True)
+        self.enemy_snake = Snake(enemy_init_size, False, (4, 30))
+        self.my_snake = Snake(player_init_size, True, (15, 2))
         self.enemy_move = "right"  # So that the early snake start is consistent
         self.obstacles = pygame.sprite.Group()
         number_of_obstacles = random.randint(5, 10)
@@ -321,6 +326,7 @@ class Game:
 
 # Static functions here
 def play_again():
+    # Resets the game instance and maintains the high-scores list size
     global game, high_scores_list
     high_scores_list = high_scores_list[:scores_to_keep]
     while not game.reset_game:
@@ -493,6 +499,8 @@ def process_input():
                     name_entered = True
 
 
+# Required to stop Pycharm throwing errors on list into list insertion
+# noinspection PyTypeChecker
 def process_high_scores(current_score):
     # Returns whether a new score was achieved
     # and the position of that score in the high-scores
@@ -505,10 +513,11 @@ def process_high_scores(current_score):
                 high_scores_list.insert(y, [player_name, str(current_score)])
                 new_high_score = True
                 score_pos = y
-                break
+                break  # Once we add the score, there's no point iterating further
         except IndexError:
             raise Exception("File content format not valid or parsed incorrectly")
     if scores_to_keep > len(high_scores_list) and not new_high_score:
+        # Add the score to the bottom of the high scores list
         high_scores_list.append([player_name, str(current_score)])
         new_high_score = True
         score_pos = len(high_scores_list)-1
@@ -550,16 +559,13 @@ while not game_quit:
     # Game loop
     while not name_entered:
         game.name_drawing()
-
     process_input()
-
-    if not game.game_lost:
+    if not game.game_lost:  # Freezes the game screen if you lose
         game.my_snake.move(game.my_snake.x_change, game.my_snake.y_change)
         game.enemy_snake.ai_movement()
         check_player_collisions()
     else:
         play_again()
-
     game.game_play_drawing()
     clock.tick(12)
 
@@ -569,4 +575,5 @@ high_scores_file.truncate()
 for x in high_scores_list:
     high_scores_file.write(str(x[0]) + " " + str(x[1]) + "\n")
 high_scores_file.close()
+
 pygame.quit()
