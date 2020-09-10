@@ -218,6 +218,8 @@ class Game:
         self.reset_game = False
 
     def game_play_drawing(self):
+        if game_quit:
+            return
         screen.fill(BLACK)
         self.my_snake.snake_pieces.draw(screen)
         self.enemy_snake.snake_pieces.draw(screen)
@@ -255,7 +257,11 @@ class Game:
             self.food_onscreen.replenish(False, self)
 
     def name_drawing(self):
+        global name_entered
         process_input()
+        if game_quit:
+            name_entered = True
+            return
         screen.fill(BLACK)
         enter_name_text = name_font.render("Enter your name: " + player_name, True, WHITE, BLACK)
         next_line_text = name_font.render("And press enter to play.", True, WHITE, BLACK)
@@ -438,6 +444,8 @@ def process_input():
                     player_name += event.unicode
                 elif event.key == pygame.K_BACKSPACE:
                     player_name = player_name[:-1]
+                elif event.key == pygame.K_SPACE:
+                    player_name += " "
                 elif event.key == pygame.K_RETURN:
                     name_entered = True
 
@@ -475,16 +483,18 @@ name_entered = False
 
 while not game_quit:
     # Game loop
+    process_input()
     while not name_entered:
         game.name_drawing()
-    process_input()
+
     if not game.game_lost:
         game.my_snake.move(game.my_snake.x_change, game.my_snake.y_change)
         game.enemy_snake.ai_movement()
         check_player_collisions()
     else:
         play_again()
+
     game.game_play_drawing()
-    clock.tick(20)
+    clock.tick(12)
 
 pygame.quit()
