@@ -63,6 +63,7 @@ enemy_init_size = 7
 
 class Snake:
     """ Class to represent one snake. """
+
     def __init__(self, starting_length, is_player, starting_pos):
         self.snake_length = starting_length
         self.segments = []
@@ -199,7 +200,7 @@ class Obstacle:
     # Represents all Obstacle objects for this game session
     def __init__(self, obstacles):
         # Randomly choose which obstacle is drawn
-        random_obstacle = random.randint(0, len(possible_obstacles)-1)
+        random_obstacle = random.randint(0, len(possible_obstacles) - 1)
         #  Choose a block number to have the origin spot from (the numbers are based on obstacle shapes for now)
         origin_block_x = random.randint(2, total_segments_w - 4)
         origin_block_y = random.randint(3, total_segments_h - 4)
@@ -520,7 +521,7 @@ def process_high_scores(current_score):
         # Add the score to the bottom of the high scores list
         high_scores_list.append([player_name, str(current_score)])
         new_high_score = True
-        score_pos = len(high_scores_list)-1
+        score_pos = len(high_scores_list) - 1
     return new_high_score, score_pos
 
 
